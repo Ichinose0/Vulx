@@ -1,10 +1,13 @@
-use ash::{Entry, vk::{InstanceCreateInfoBuilder, InstanceCreateInfo, DeviceCreateInfo, DeviceQueueCreateInfo}};
-use crate::{PhysicalDevice, LogicalDevice, QueueProperties};
+use crate::{LogicalDevice, PhysicalDevice, QueueProperties};
+use ash::{
+    vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
+    Entry,
+};
 
 pub struct InstanceBuilder<'a> {
     entry: ash::Entry,
     name: &'a str,
-    targets: Vec<InstanceTarget>
+    targets: Vec<InstanceTarget>,
 }
 
 impl<'a> InstanceBuilder<'a> {
@@ -12,12 +15,12 @@ impl<'a> InstanceBuilder<'a> {
         Self::default()
     }
 
-    pub fn name(mut self,name: &'a str) -> Self {
+    pub fn name(mut self, name: &'a str) -> Self {
         self.name = name;
         self
     }
 
-    pub fn targets(mut self,targets: Vec<InstanceTarget>) -> Self {
+    pub fn targets(mut self, targets: Vec<InstanceTarget>) -> Self {
         self.targets = targets;
         self
     }
@@ -27,7 +30,7 @@ impl<'a> InstanceBuilder<'a> {
         let inner = unsafe { self.entry.create_instance(&create_info, None).unwrap() };
         Instance {
             inner,
-            entry: self.entry
+            entry: self.entry,
         }
     }
 }
@@ -38,19 +41,19 @@ impl<'a> Default for InstanceBuilder<'a> {
         Self {
             entry,
             name: "",
-            targets: vec![]
+            targets: vec![],
         }
     }
 }
 
 pub enum InstanceTarget {
     Image,
-    Window
+    Window,
 }
 
-pub struct Instance{
-    inner: ash::Instance,
-    entry: Entry
+pub struct Instance {
+    pub(crate) inner: ash::Instance,
+    entry: Entry,
 }
 
 impl Instance {
@@ -63,22 +66,32 @@ impl Instance {
         devices
     }
 
-    pub fn get_queue_properties(&self,device: PhysicalDevice) -> Vec<QueueProperties> {
+    pub fn get_queue_properties(&self, device: PhysicalDevice) -> Vec<QueueProperties> {
         let mut prop = vec![];
-        let props = unsafe { self.inner.get_physical_device_queue_family_properties(device.0) };
+        let props = unsafe {
+            self.inner
+                .get_physical_device_queue_family_properties(device.0)
+        };
         for i in props {
             prop.push(QueueProperties(i));
         }
         prop
     }
 
-    pub fn create_logical_device(&self,device: PhysicalDevice,queue_family_index: usize) -> LogicalDevice {
-        let queue_infos = vec![DeviceQueueCreateInfo::builder().queue_family_index(queue_family_index as u32).queue_priorities(&[1.0]).build()];
-        let create_info = DeviceCreateInfo::builder().queue_create_infos(&queue_infos).build();
+    pub fn create_logical_device(
+        &self,
+        device: PhysicalDevice,
+        queue_family_index: usize,
+    ) -> LogicalDevice {
+        let queue_infos = vec![DeviceQueueCreateInfo::builder()
+            .queue_family_index(queue_family_index as u32)
+            .queue_priorities(&[1.0])
+            .build()];
+        let create_info = DeviceCreateInfo::builder()
+            .queue_create_infos(&queue_infos)
+            .build();
         let inner = unsafe { self.inner.create_device(device.0, &create_info, None) }.unwrap();
-        LogicalDevice {
-            inner
-        }
+        LogicalDevice { inner }
     }
 }
 

@@ -1,15 +1,17 @@
-mod types;
-mod instance;
 mod device;
+pub mod geometry;
+mod image;
+mod instance;
 mod queue;
+pub mod target;
+mod types;
 #[cfg(feature = "util")]
 pub mod util;
-pub mod target;
-pub mod geometry;
-pub use types::*;
-pub use instance::*;
 pub use device::*;
+pub use image::*;
+pub use instance::*;
 pub use queue::*;
+pub use types::*;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
