@@ -34,6 +34,9 @@ pub enum Color {
     HSV(f64,f64,f64)
 }
 
+#[derive(Clone,Copy)]
+pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
+
 pub trait RenderTarget {
     fn path(&self,path: PathGeometry,color: Color,thickness: f64);
     fn stroke(&self,line: Line,color: Color,thickness: f64);
