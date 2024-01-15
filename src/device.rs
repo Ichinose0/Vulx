@@ -1,9 +1,9 @@
 use ash::vk::{
     CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandPool,
-    CommandPoolCreateInfo, DeviceQueueCreateInfo,
+    CommandPoolCreateInfo, DeviceQueueCreateInfo, ShaderModuleCreateInfo,
 };
 
-use crate::Queue;
+use crate::{Queue, Shader, ShaderKind, Spirv};
 
 pub struct LogicalDevice {
     pub(crate) inner: ash::Device,
@@ -12,6 +12,18 @@ pub struct LogicalDevice {
 impl LogicalDevice {
     pub fn get_queue(&self, queue_family_index: usize) -> Queue {
         Queue(unsafe { self.inner.get_device_queue(queue_family_index as u32, 0) })
+    }
+
+    pub fn create_shader_module(&self, spirv: Spirv, kind: ShaderKind) -> Result<Shader, ()> {
+        let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
+        let shader = match unsafe { self.inner.create_shader_module(&shader_create_info, None) } {
+            Ok(s) => s,
+            Err(_) => panic!("Err"),
+        };
+        Ok(Shader {
+            inner: shader,
+            kind,
+        })
     }
 
     pub(crate) fn create_command_pool(&self, queue_family_index: usize) -> CommandPool {

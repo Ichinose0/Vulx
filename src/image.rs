@@ -1,6 +1,6 @@
 use ash::vk::{
     Extent3D, Format, ImageCreateInfo, ImageLayout, ImageTiling, ImageUsageFlags,
-    MemoryAllocateInfo, SampleCountFlags, SharingMode,
+    MemoryAllocateInfo, SampleCountFlags, SharingMode, Viewport, Rect2D,
 };
 
 use crate::{Instance, LogicalDevice, PhysicalDevice};
@@ -95,7 +95,9 @@ impl ImageBuilder {
             device.inner.bind_image_memory(inner, memory, 0);
         }
 
-        Image { inner }
+        let viewport = Viewport::builder().width(self.width as f32).height(self.height as f32).min_depth(0.0).max_depth(1.0).x(0.0).y(0.0).build();
+
+        Image { inner,viewport }
     }
 }
 
@@ -111,5 +113,37 @@ impl Default for ImageBuilder {
 
 #[derive(Clone,Copy)]
 pub struct Image {
-    inner: ash::vk::Image,
+    pub(crate) inner: ash::vk::Image,
+    pub(crate) viewport: Viewport,
+}
+
+pub struct ImageView {
+    pub(crate) inner: ash::vk::ImageView,
+}
+
+impl ImageView {
+    pub fn create_frame_buffer(
+        &self,
+        device: &Device,
+        render_pass: &RenderPass,
+        width: u32,
+        height: u32,
+    ) -> Result<FrameBuffer, GMResult> {
+        let create_info = FramebufferCreateInfo::builder()
+            .width(width)
+            .height(height)
+            .layers(1)
+            .render_pass(render_pass.inner)
+            .attachments(&[self.inner])
+            .build();
+        let inner = match unsafe { device.inner.create_framebuffer(&create_info, None) } {
+            Ok(f) => f,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
+        Ok(FrameBuffer { inner })
+    }
+}
+
+pub struct FrameBuffer {
+    pub(crate) inner: ash::vk::Framebuffer,
 }

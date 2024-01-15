@@ -3,6 +3,9 @@ pub mod geometry;
 mod image;
 mod instance;
 mod queue;
+mod renderpass;
+mod pipeline;
+mod shader;
 pub mod target;
 mod types;
 #[cfg(feature = "util")]
@@ -11,6 +14,9 @@ pub use device::*;
 pub use image::*;
 pub use instance::*;
 pub use queue::*;
+pub use renderpass::*;
+pub use pipeline::*;
+pub use shader::*;
 pub use types::*;
 
 pub fn add(left: usize, right: usize) -> usize {
