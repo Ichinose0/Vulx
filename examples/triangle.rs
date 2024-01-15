@@ -1,4 +1,4 @@
-use Vulx::InstanceBuilder;
+use Vulx::{InstanceBuilder, target::PngRenderTarget, RenderTarget};
 
 fn main() {
     let instance = InstanceBuilder::new().build();
@@ -28,4 +28,9 @@ fn main() {
 
     let device = instance.create_logical_device(physical_devices[suitable_device.unwrap()],queue_family_index);
     let queue = device.get_queue(queue_family_index);
+
+    let render_target = PngRenderTarget::new(instance,device,queue,queue_family_index);
+
+    render_target.begin();
+    render_target.end();
 }

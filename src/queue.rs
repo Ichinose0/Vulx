@@ -1,5 +1,6 @@
 use ash::vk::{QueueFamilyProperties, QueueFlags};
 
+#[derive(Clone,Copy)]
 pub struct Queue(pub(crate) ash::vk::Queue);
 
 pub struct QueueProperties(pub(crate) QueueFamilyProperties);
