@@ -1,4 +1,7 @@
-use Vulx::{target::PngRenderTarget, ImageBuilder, InstanceBuilder, RenderTarget, Spirv, ShaderKind, RenderPass, SubPass};
+use Vulx::{
+    target::PngRenderTarget, ImageBuilder, InstanceBuilder, RenderPass, RenderTarget, ShaderKind,
+    Spirv, SubPass,
+};
 
 fn main() {
     let instance = InstanceBuilder::new().build();
@@ -32,11 +35,20 @@ fn main() {
     );
     let queue = device.get_queue(queue_family_index);
 
-    let image = ImageBuilder::new().width(800).height(600).build(&instance,physical_devices[suitable_device.unwrap()],&device);
+    let image = ImageBuilder::new().width(640).height(480).build(
+        &instance,
+        physical_devices[suitable_device.unwrap()],
+        &device,
+    );
+    let image_view = image.create_image_view(&device).unwrap();
 
     let subpasses = vec![SubPass::new()];
 
     let render_pass = RenderPass::new(&device, &subpasses);
+
+    let frame_buffer = image_view
+        .create_frame_buffer(&device, &render_pass, &image)
+        .unwrap();
 
     let fragment_shader = device
         .create_shader_module(
@@ -50,12 +62,22 @@ fn main() {
             ShaderKind::Vertex,
         )
         .unwrap();
+    
     let pipeline = render_pass
         .create_pipeline(&image, &device, &[fragment_shader, vertex_shader])
         .unwrap();
 
-    let render_target = PngRenderTarget::new(instance, device, queue, queue_family_index);
-
+    let mut render_target = PngRenderTarget::new(
+        instance,
+        device,
+        queue,
+        render_pass,
+        frame_buffer,
+        pipeline[0],
+        physical_devices[suitable_device.unwrap()],
+        queue_family_index,
+    );
+    render_target.set_image(image);
     render_target.begin();
     render_target.end();
 }

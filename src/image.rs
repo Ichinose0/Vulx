@@ -1,9 +1,12 @@
+use std::ffi::c_void;
+
 use ash::vk::{
-    Extent3D, Format, ImageCreateInfo, ImageLayout, ImageTiling, ImageUsageFlags,
-    MemoryAllocateInfo, SampleCountFlags, SharingMode, Viewport, Rect2D,
+    ComponentMapping, ComponentSwizzle, Extent3D, Format, FramebufferCreateInfo, ImageAspectFlags,
+    ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling, ImageUsageFlags,
+    ImageViewCreateInfo, MemoryAllocateInfo, Rect2D, SampleCountFlags, SharingMode, Viewport, DeviceMemory, MemoryMapFlags, MemoryPropertyFlags,
 };
 
-use crate::{Instance, LogicalDevice, PhysicalDevice};
+use crate::{Instance, LogicalDevice, PhysicalDevice, RenderPass};
 
 #[allow(non_camel_case_types)]
 pub enum ImageType {
@@ -79,7 +82,7 @@ impl ImageBuilder {
         let mut suitable_memory_found = false;
 
         for i in 0..mem_prop.memory_type_count {
-            if (mem_req.memory_type_bits & (1 << i)) != 0 {
+            if ((mem_req.memory_type_bits & (1 << i)) != 0 && (mem_prop.memory_types[i as usize].property_flags & MemoryPropertyFlags::HOST_VISIBLE) .as_raw()!= 0 ) {
                 create_info = create_info.memory_type_index(i);
                 suitable_memory_found = true;
                 break;
@@ -90,14 +93,22 @@ impl ImageBuilder {
             panic!("No memory available");
         }
 
+        let memory;
         unsafe {
-            let memory = device.inner.allocate_memory(&create_info, None).unwrap();
-            device.inner.bind_image_memory(inner, memory, 0);
+            memory = device.inner.allocate_memory(&create_info, None).unwrap();
+            device.inner.bind_image_memory(inner, memory, 0).unwrap();
         }
 
-        let viewport = Viewport::builder().width(self.width as f32).height(self.height as f32).min_depth(0.0).max_depth(1.0).x(0.0).y(0.0).build();
+        let viewport = Viewport::builder()
+            .width(self.width as f32)
+            .height(self.height as f32)
+            .min_depth(0.0)
+            .max_depth(1.0)
+            .x(0.0)
+            .y(0.0)
+            .build();
 
-        Image { inner,viewport }
+        Image { inner, viewport,memory, mem_size: mem_req.size }
     }
 }
 
@@ -111,10 +122,55 @@ impl Default for ImageBuilder {
     }
 }
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct Image {
     pub(crate) inner: ash::vk::Image,
     pub(crate) viewport: Viewport,
+    pub(crate) memory: DeviceMemory,
+    pub(crate) mem_size: u64
+}
+
+impl Image {
+    /// Create an image.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - Valid Devices
+    pub fn create_image_view(&self, device: &LogicalDevice) -> Result<ImageView, ()> {
+        let create_info = ImageViewCreateInfo::builder()
+            .image(self.inner)
+            .view_type(ash::vk::ImageViewType::TYPE_2D)
+            .format(Format::R8G8B8A8_UNORM)
+            .components(
+                ComponentMapping::builder()
+                    .a(ComponentSwizzle::IDENTITY)
+                    .r(ComponentSwizzle::IDENTITY)
+                    .g(ComponentSwizzle::IDENTITY)
+                    .b(ComponentSwizzle::IDENTITY)
+                    .build(),
+            )
+            .subresource_range(
+                ImageSubresourceRange::builder()
+                    .aspect_mask(ImageAspectFlags::COLOR)
+                    .base_mip_level(0)
+                    .level_count(1)
+                    .base_array_layer(0)
+                    .layer_count(1)
+                    .build(),
+            )
+            .build();
+        let inner = match unsafe { device.inner.create_image_view(&create_info, None) } {
+            Ok(i) => i,
+            Err(_) => return Err(()),
+        };
+        Ok(ImageView { inner })
+    }
+
+    pub fn map_memory(&self,device: &LogicalDevice) -> *mut c_void {
+        unsafe {
+            device.inner.map_memory(self.memory, 0, self.mem_size, MemoryMapFlags::empty()).unwrap()
+        }
+    }
 }
 
 pub struct ImageView {
@@ -124,21 +180,20 @@ pub struct ImageView {
 impl ImageView {
     pub fn create_frame_buffer(
         &self,
-        device: &Device,
+        device: &LogicalDevice,
         render_pass: &RenderPass,
-        width: u32,
-        height: u32,
-    ) -> Result<FrameBuffer, GMResult> {
+        image: &Image,
+    ) -> Result<FrameBuffer, ()> {
         let create_info = FramebufferCreateInfo::builder()
-            .width(width)
-            .height(height)
+            .width(image.viewport.width as u32)
+            .height(image.viewport.height as u32)
             .layers(1)
             .render_pass(render_pass.inner)
             .attachments(&[self.inner])
             .build();
         let inner = match unsafe { device.inner.create_framebuffer(&create_info, None) } {
             Ok(f) => f,
-            Err(_) => return Err(GMResult::UnknownError),
+            Err(_) => return Err(()),
         };
         Ok(FrameBuffer { inner })
     }

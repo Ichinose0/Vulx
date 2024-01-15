@@ -46,5 +46,5 @@ pub trait RenderTarget {
     fn stroke(&self, line: Line, color: Color, thickness: f64);
     fn end(&self);
 
-    fn set_image(&self, image: Image);
+    fn set_image(&mut self, image: Image);
 }

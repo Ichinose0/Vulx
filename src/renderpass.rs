@@ -1,8 +1,18 @@
 use std::ffi::CString;
 
-use ash::vk::{PipelineCache, SubpassDescription, PipelineBindPoint, ImageLayout, AttachmentReference, AttachmentDescription, Format, SampleCountFlags, AttachmentLoadOp, AttachmentStoreOp, RenderPassCreateInfo, ShaderStageFlags, PipelineShaderStageCreateInfo, PipelineViewportStateCreateInfo, Rect2D, Extent2D, Offset2D, PipelineVertexInputStateCreateInfo, PipelineInputAssemblyStateCreateInfo, PrimitiveTopology, PipelineRasterizationStateCreateInfo, PolygonMode, CullModeFlags, FrontFace, PipelineMultisampleStateCreateInfo, PipelineColorBlendAttachmentState, ColorComponentFlags, PipelineColorBlendStateCreateInfo, PipelineLayoutCreateInfo, GraphicsPipelineCreateInfo};
+use ash::vk::{
+    AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
+    ColorComponentFlags, CullModeFlags, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo,
+    ImageLayout, Offset2D, PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
+    PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo,
+    PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
+    PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
+    PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
+    PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
+    SubpassDescription,
+};
 
-use crate::{LogicalDevice, Image, Pipeline, Shader};
+use crate::{Image, LogicalDevice, Pipeline, Shader};
 
 pub struct SubPass(SubpassDescription);
 
@@ -31,11 +41,11 @@ pub struct RenderPass {
 }
 
 impl RenderPass {
-    pub fn new(device: &LogicalDevice,subpasses: &[SubPass]) -> Self {
+    pub fn new(device: &LogicalDevice, subpasses: &[SubPass]) -> Self {
         let attachment_descs = vec![AttachmentDescription::builder()
             .format(Format::R8G8B8A8_UNORM)
             .samples(SampleCountFlags::TYPE_1)
-            .load_op(AttachmentLoadOp::DONT_CARE)
+            .load_op(AttachmentLoadOp::CLEAR)
             .store_op(AttachmentStoreOp::STORE)
             .stencil_load_op(AttachmentLoadOp::DONT_CARE)
             .stencil_store_op(AttachmentStoreOp::DONT_CARE)
@@ -80,7 +90,15 @@ impl RenderPass {
                     .build(),
             );
         }
-        let scissors = Rect2D::builder().extent(Extent2D::builder().width(image.viewport.width as u32).height(image.viewport.height as u32).build()).offset(Offset2D::builder().x(0).y(0).build()).build();
+        let scissors = Rect2D::builder()
+            .extent(
+                Extent2D::builder()
+                    .width(image.viewport.width as u32)
+                    .height(image.viewport.height as u32)
+                    .build(),
+            )
+            .offset(Offset2D::builder().x(0).y(0).build())
+            .build();
         let viewport_state_info = PipelineViewportStateCreateInfo::builder()
             .viewports(&[image.viewport])
             .scissors(&[scissors])
@@ -152,7 +170,8 @@ impl RenderPass {
                 &[pipeline_create_info],
                 None,
             )
-        }.unwrap();
+        }
+        .unwrap();
 
         let mut pipelines = vec![];
 
