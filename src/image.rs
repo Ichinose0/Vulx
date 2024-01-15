@@ -1,9 +1,10 @@
 use std::ffi::c_void;
 
 use ash::vk::{
-    ComponentMapping, ComponentSwizzle, Extent3D, Format, FramebufferCreateInfo, ImageAspectFlags,
-    ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling, ImageUsageFlags,
-    ImageViewCreateInfo, MemoryAllocateInfo, Rect2D, SampleCountFlags, SharingMode, Viewport, DeviceMemory, MemoryMapFlags, MemoryPropertyFlags,
+    ComponentMapping, ComponentSwizzle, DeviceMemory, Extent3D, Format, FramebufferCreateInfo,
+    ImageAspectFlags, ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling,
+    ImageUsageFlags, ImageViewCreateInfo, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
+    Rect2D, SampleCountFlags, SharingMode, Viewport,
 };
 
 use crate::{Instance, LogicalDevice, PhysicalDevice, RenderPass};
@@ -82,7 +83,12 @@ impl ImageBuilder {
         let mut suitable_memory_found = false;
 
         for i in 0..mem_prop.memory_type_count {
-            if ((mem_req.memory_type_bits & (1 << i)) != 0 && (mem_prop.memory_types[i as usize].property_flags & MemoryPropertyFlags::HOST_VISIBLE) .as_raw()!= 0 ) {
+            if ((mem_req.memory_type_bits & (1 << i)) != 0
+                && (mem_prop.memory_types[i as usize].property_flags
+                    & MemoryPropertyFlags::HOST_VISIBLE)
+                    .as_raw()
+                    != 0)
+            {
                 create_info = create_info.memory_type_index(i);
                 suitable_memory_found = true;
                 break;
@@ -108,7 +114,12 @@ impl ImageBuilder {
             .y(0.0)
             .build();
 
-        Image { inner, viewport,memory, mem_size: mem_req.size }
+        Image {
+            inner,
+            viewport,
+            memory,
+            mem_size: mem_req.size,
+        }
     }
 }
 
@@ -127,7 +138,7 @@ pub struct Image {
     pub(crate) inner: ash::vk::Image,
     pub(crate) viewport: Viewport,
     pub(crate) memory: DeviceMemory,
-    pub(crate) mem_size: u64
+    pub(crate) mem_size: u64,
 }
 
 impl Image {
@@ -166,9 +177,12 @@ impl Image {
         Ok(ImageView { inner })
     }
 
-    pub fn map_memory(&self,device: &LogicalDevice) -> *mut c_void {
+    pub fn map_memory(&self, device: &LogicalDevice) -> *mut c_void {
         unsafe {
-            device.inner.map_memory(self.memory, 0, self.mem_size, MemoryMapFlags::empty()).unwrap()
+            device
+                .inner
+                .map_memory(self.memory, 0, self.mem_size, MemoryMapFlags::empty())
+                .unwrap()
         }
     }
 }

@@ -1,6 +1,6 @@
 use Vulx::{
-    target::PngRenderTarget, ImageBuilder, InstanceBuilder, RenderPass, RenderTarget, ShaderKind,
-    Spirv, SubPass,
+    target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
+    ImageBuilder, InstanceBuilder, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass,
 };
 
 fn main() {
@@ -62,22 +62,26 @@ fn main() {
             ShaderKind::Vertex,
         )
         .unwrap();
-    
+
     let pipeline = render_pass
         .create_pipeline(&image, &device, &[fragment_shader, vertex_shader])
         .unwrap();
 
-    let mut render_target = PngRenderTarget::new(
-        instance,
-        device,
-        queue,
-        render_pass,
-        frame_buffer,
-        pipeline[0],
-        physical_devices[suitable_device.unwrap()],
-        queue_family_index,
-    );
-    render_target.set_image(image);
+    let command_buffer = CommandBuffer::new(&device, queue_family_index);
+
+    let render_target = RenderTargetBuilder::new()
+        .instance(instance)
+        .command_buffer(command_buffer)
+        .logical_device(device)
+        .physical_device(physical_devices[suitable_device.unwrap()])
+        .image(Some(image))
+        .pipeline(pipeline[0])
+        .queue(queue)
+        .renderpass(render_pass)
+        .frame_buffer(frame_buffer)
+        .build_png("triangle.png")
+        .unwrap();
+
     render_target.begin();
     render_target.end();
 }
