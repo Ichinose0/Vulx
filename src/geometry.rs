@@ -34,9 +34,42 @@ pub(crate) struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(vertices: &[Vec2<f64>],device: &LogicalDevice) -> Self {
+    pub fn new(vertices: &[Vec2<f64>],instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
         let create_info = BufferCreateInfo::builder().size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).usage(ash::vk::BufferUsageFlag::VERTEX_BUFFER).sharing_mode(ash::vk::SharingMode::EXCLUSIVE).build();
         let buffer = unsafe { device.inner.create_buffer(&create_info) }.unwrap();
+        let mem_prop = unsafe {
+            instance
+                .inner
+                .get_physical_device_memory_properties(physical_device.0)
+        };
+
+        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(inner) };
+        let mut create_info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
+
+        let mut suitable_memory_found = false;
+
+        for i in 0..mem_prop.memory_type_count {
+            if ((mem_req.memory_type_bits & (1 << i)) != 0
+                && (mem_prop.memory_types[i as usize].property_flags
+                    & MemoryPropertyFlags::HOST_VISIBLE)
+                    .as_raw()
+                    != 0)
+            {
+                create_info = create_info.memory_type_index(i);
+                suitable_memory_found = true;
+                break;
+            }
+        }
+
+        if !suitable_memory_found {
+            panic!("No memory available");
+        }
+
+        let memory;
+        unsafe {
+            memory = device.inner.allocate_memory(&create_info, None).unwrap();
+            device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
+        }
         Self {
             buffer
         }

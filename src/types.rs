@@ -55,8 +55,8 @@ pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
 
 pub trait RenderTarget {
     fn begin(&self);
-    fn path(&self, path: PathGeometry, color: Color, thickness: f64);
-    fn stroke(&self, line: Line, color: Color, thickness: f64);
+    fn fill(&self, path: PathGeometry, color: Color, thickness: f64);
+    fn stroke(&self, path: PathGeometry, color: Color, thickness: f64);
     fn end(&self);
 
     fn set_image(&mut self, image: Image);
