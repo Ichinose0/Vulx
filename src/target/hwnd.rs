@@ -2,7 +2,7 @@ use std::{fs::File, io::BufWriter};
 
 use ash::vk::{
     ClearValue, Extent2D, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, Offset2D,
-    PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
+    PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents, CommandBufferResetFlags, Fence, FenceCreateInfo, Semaphore, PresentInfoKHR,
 };
 
 use super::CommandBuffer;
@@ -19,29 +19,50 @@ pub struct HwndRenderTarget {
     pub(crate) physical_device: PhysicalDevice,
     pub(crate) queue: Queue,
 
-    pub(crate) frame_buffer: FrameBuffer,
+    pub(crate) frame_buffers: Vec<FrameBuffer>,
     pub(crate) render_pass: RenderPass,
     pub(crate) pipeline: Pipeline,
 
     pub(crate) image: Option<Image>,
 
-    pub(crate) surface: super::surface::Surface
+    pub(crate) surface: super::surface::Surface,
+    pub(crate) swapchain: super::swapchain::Swapchain,
+    pub(crate) fence: Fence,
+    pub(crate) img_index: u32
 }
 
 impl HwndRenderTarget {}
 
 impl RenderTarget for HwndRenderTarget {
-    fn begin(&self) {
-        self.buffer.begin(&self.logical_device);
+    fn begin(&mut self) {
+        
         unsafe {
+            self.logical_device
+                .inner
+                .reset_command_buffer(self.buffer.cmd_buffers[0],CommandBufferResetFlags::empty()).unwrap();
+            self.buffer.begin(&self.logical_device);
+            
+            self.logical_device.inner.reset_fences(&[self.fence]).unwrap();
+            self.img_index = match unsafe {
+                self.swapchain
+                    .inner
+                    .acquire_next_image(self.swapchain.khr, 1000000000, Semaphore::null(), self.fence)
+            } {
+                Ok(i) => {
+                    i.0
+                },
+                Err(_) => panic!("Err"),
+            };
+            self.logical_device.inner.wait_for_fences(&[self.fence],true,1000000000).unwrap();
             let mut clear = ClearValue::default();
+        
             clear.color.float32[0] = 1.0;
             clear.color.float32[1] = 1.0;
             clear.color.float32[2] = 1.0;
             clear.color.float32[3] = 1.0;
             let create_info = RenderPassBeginInfo::builder()
                 .render_pass(self.render_pass.inner)
-                .framebuffer(self.frame_buffer.inner)
+                .framebuffer(self.frame_buffers[self.img_index as usize].inner)
                 .render_area(
                     Rect2D::builder()
                         .extent(
@@ -75,7 +96,7 @@ impl RenderTarget for HwndRenderTarget {
     {
     }
 
-    fn end(&self) {
+    fn end(&mut self) {
         unsafe {
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],
@@ -104,9 +125,12 @@ impl RenderTarget for HwndRenderTarget {
             self.logical_device
                 .inner
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
+            
         }
         self.buffer.end(&self.logical_device);
         self.buffer.submit(&self.logical_device, self.queue);
+        let present_info = PresentInfoKHR::builder().swapchains(&[self.swapchain.khr]).image_indices(&[self.img_index]).build();
+        unsafe { self.swapchain.inner.queue_present(self.queue.0, &present_info).unwrap() };
     }
 
     fn set_image(&mut self, image: crate::Image) {

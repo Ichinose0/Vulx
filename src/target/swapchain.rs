@@ -3,7 +3,7 @@ use ash::vk::{
     ImageViewCreateInfo, ImageViewType, SurfaceFormatKHR, SwapchainKHR,
 };
 
-use crate::{Device, GMResult, ImageView};
+use crate::{LogicalDevice, ImageView};
 
 pub struct AcquireImageResult {
     pub state: SwapchainState,
@@ -22,7 +22,7 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-    pub fn get_image(&self, device: &Device) -> Result<Vec<ImageView>, GMResult> {
+    pub fn get_image(&self, device: &LogicalDevice) -> Result<Vec<ImageView>, ()> {
         let images = match unsafe { self.inner.get_swapchain_images(self.khr) } {
             Ok(i) => i,
             Err(_) => panic!("Err"),

@@ -88,7 +88,7 @@ fn main() {
 
         let window_handle = window.window_handle().unwrap();
 
-        let render_target = match window_handle.as_raw() {
+        let mut render_target = match window_handle.as_raw() {
             winit::raw_window_handle::RawWindowHandle::Win32(handle) => {
                 RenderTargetBuilder::new()
             .instance(instance)

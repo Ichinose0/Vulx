@@ -30,7 +30,7 @@ pub struct PngRenderTarget {
 impl PngRenderTarget {}
 
 impl RenderTarget for PngRenderTarget {
-    fn begin(&self) {
+    fn begin(&mut self) {
         self.buffer.begin(&self.logical_device);
         unsafe {
             let mut clear = ClearValue::default();
@@ -74,7 +74,7 @@ impl RenderTarget for PngRenderTarget {
     {
     }
 
-    fn end(&self) {
+    fn end(&mut self) {
         unsafe {
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],

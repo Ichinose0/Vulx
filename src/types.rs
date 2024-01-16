@@ -156,14 +156,14 @@ pub enum Color {
 pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
 
 pub trait RenderTarget {
-    fn begin(&self);
+    fn begin(&mut self);
     fn fill<P>(&self, path: P, color: Color, thickness: f64)
     where
         P: IntoPath;
     fn stroke<P>(&self, path: P, color: Color, thickness: f64)
     where
         P: IntoPath;
-    fn end(&self);
+    fn end(&mut self);
 
     fn set_image(&mut self, image: Image);
 }
