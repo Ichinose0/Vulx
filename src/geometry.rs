@@ -1,7 +1,9 @@
 use std::ffi::c_void;
 
-use crate::{Vec3,Vec2,LogicalDevice, Instance, PhysicalDevice, IntoPath};
-use ash::vk::{BufferCreateInfo, MemoryAllocateInfo, MemoryPropertyFlags, MappedMemoryRange, MemoryMapFlags};
+use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3};
+use ash::vk::{
+    BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
+};
 
 /// # Represents a line segment
 /// ## Members
@@ -32,13 +34,22 @@ impl Line {
 }
 
 pub(crate) struct Buffer {
-    buffer: ash::vk::Buffer
+    buffer: ash::vk::Buffer,
 }
 
 impl Buffer {
-    pub fn new(vertices: &mut [Vec2<f64>],instance: &Instance,physical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
-        let create_info = BufferCreateInfo::builder().size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER).sharing_mode(ash::vk::SharingMode::EXCLUSIVE).build();
-        let buffer = unsafe { device.inner.create_buffer(&create_info,None) }.unwrap();
+    pub fn new(
+        vertices: &mut [Vec2<f64>],
+        instance: &Instance,
+        physical_device: PhysicalDevice,
+        device: &LogicalDevice,
+    ) -> Self {
+        let create_info = BufferCreateInfo::builder()
+            .size((std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64)
+            .usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER)
+            .sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
+            .build();
+        let buffer = unsafe { device.inner.create_buffer(&create_info, None) }.unwrap();
         let mem_prop = unsafe {
             instance
                 .inner
@@ -72,48 +83,63 @@ impl Buffer {
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
-            write_mem = device.inner.map_memory(memory,0,(std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64,MemoryMapFlags::empty()).unwrap();
-            
-            let mapped_memory_range = MappedMemoryRange::builder().memory(memory).offset(0).size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).build();
+            write_mem = device
+                .inner
+                .map_memory(
+                    memory,
+                    0,
+                    (std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64,
+                    MemoryMapFlags::empty(),
+                )
+                .unwrap();
+
+            let mapped_memory_range = MappedMemoryRange::builder()
+                .memory(memory)
+                .offset(0)
+                .size((std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64)
+                .build();
             write_mem = vertices.as_mut_ptr() as *mut c_void;
-            device.inner.flush_mapped_memory_ranges(&[mapped_memory_range]);
+            device
+                .inner
+                .flush_mapped_memory_ranges(&[mapped_memory_range]);
             device.inner.unmap_memory(memory);
         }
-        Self {
-            buffer
-        }
+        Self { buffer }
     }
 }
 
 pub struct Path {
-    buffer: Buffer
+    buffer: Buffer,
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 pub struct PathGeometry {
-    vertices: Vec<Vec<Vec2<f64>>>
+    vertices: Vec<Vec<Vec2<f64>>>,
 }
 
 impl PathGeometry {
     pub fn new() -> Self {
         Self {
-            vertices: vec![]
+            vertices: vec![vec![]],
         }
     }
 
-    pub fn triangle(mut self,vert: Vec3<Vec2<f64>>) -> Self {
-        for i in 0..2 {
-            
+    pub fn triangle(mut self, vert: Vec3<Vec2<f64>>) -> Self {
+        for i in vert {
+            self.vertices[0].push(i);
         }
         self
     }
 }
 
 impl IntoPath for PathGeometry {
-    fn into_path(mut self,instance: &Instance,physical_device: PhysicalDevice,device: &LogicalDevice) -> Path {
-        let buffer = Buffer::new(&mut self.vertices[0],instance,physical_device,device);
-        Path {
-            buffer
-        }
+    fn into_path(
+        mut self,
+        instance: &Instance,
+        physical_device: PhysicalDevice,
+        device: &LogicalDevice,
+    ) -> Path {
+        let buffer = Buffer::new(&mut self.vertices[0], instance, physical_device, device);
+        Path { buffer }
     }
 }
