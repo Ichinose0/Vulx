@@ -95,9 +95,11 @@ impl PathGeometry {
     pub fn triangle(mut self,vert: Vec3<Vec2<f64>>>) -> Self {
         self
     }
+}
 
-    fn into(self,device: &LogicalDevice) -> Path {
-        let buffer = Buffer::new(&self.vertices,device);
+impl IntoPath for PathGeometry {
+    fn into(self,instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Path {
+        let buffer = Buffer::new(&self.vertices,instance,physical_device,device);
         Path {
             buffer
         }
