@@ -1,8 +1,12 @@
+//! Type definitions used in Vulx
+
 use crate::{
     geometry::{Line, PathGeometry},
     Image,
 };
 
+
+/// Vector type with fixed number of elements at 2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Vec2<T>(T, T);
 
@@ -12,6 +16,7 @@ impl<T> Vec2<T> {
     }
 }
 
+/// Vector type with fixed number of elements at 3
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Vec3<T>(T, T, T);
 
@@ -21,6 +26,7 @@ impl<T> Vec3<T> {
     }
 }
 
+/// Vector type with fixed number of elements at 4
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Vec4<T>(T, T, T, T);
 
@@ -30,13 +36,20 @@ impl<T> Vec4<T> {
     }
 }
 
+/// Represents a color
+///
+/// Initialization with ARGB allows you to create your own colors
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
+    /// Specified in RGB color space.
     RGB(f64, f64, f64),
+    /// Specified in RGBA color space.
     RGBA(f64, f64, f64, f64),
+    /// Specified in HSV color space.
     HSV(f64, f64, f64),
 }
 
+/// A handle representing the physical device.
 #[derive(Clone, Copy)]
 pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
 

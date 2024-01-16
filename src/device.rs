@@ -5,11 +5,13 @@ use ash::vk::{
 
 use crate::{Queue, Shader, ShaderKind, Spirv};
 
+/// Represents a logical device.
 pub struct LogicalDevice {
     pub(crate) inner: ash::Device,
 }
 
 impl LogicalDevice {
+    /// Get the queue from the index number
     pub fn get_queue(&self, queue_family_index: usize) -> Queue {
         Queue(unsafe { self.inner.get_device_queue(queue_family_index as u32, 0) })
     }
@@ -26,6 +28,7 @@ impl LogicalDevice {
         })
     }
 
+    #[doc(hidden)]
     pub(crate) fn create_command_pool(&self, queue_family_index: usize) -> CommandPool {
         let create_info = CommandPoolCreateInfo::builder()
             .queue_family_index(queue_family_index as u32)
@@ -33,6 +36,7 @@ impl LogicalDevice {
         unsafe { self.inner.create_command_pool(&create_info, None) }.unwrap()
     }
 
+    #[doc(hidden)]
     pub(crate) fn allocate_command_buffer(&self, command_pool: CommandPool) -> Vec<CommandBuffer> {
         let create_info = CommandBufferAllocateInfo::builder()
             .command_pool(command_pool)

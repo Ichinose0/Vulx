@@ -146,7 +146,7 @@ impl Image {
     ///
     /// # Arguments
     ///
-    /// * `device` - Valid Devices
+    /// * `device` - Valid LogicalDevice
     pub fn create_image_view(&self, device: &LogicalDevice) -> Result<ImageView, ()> {
         let create_info = ImageViewCreateInfo::builder()
             .image(self.inner)
