@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = []
+default = ["window"]
+window = ["ash-window"]
 util = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,3 +14,8 @@ util = []
 ash = { version = "0.36", features = ["linked"] }
 png = "0.17.11"
 libc = "0.2.152"
+
+ash-window = { version = "0.9.1", optional = true }
+
+[dev-dependencies]
+winit = "0.29.10"

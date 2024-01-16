@@ -1,5 +1,12 @@
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+mod hwnd;
 mod png;
+pub(crate) mod surface;
 use ash::vk::{CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, SubmitInfo};
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+pub use hwnd::*;
 pub use png::*;
 
 use crate::{
@@ -66,6 +73,59 @@ impl RenderTargetBuilder {
     pub fn image(mut self, image: Option<Image>) -> Self {
         self.image = image;
         self
+    }
+
+    #[cfg(target_os = "windows")]
+    #[cfg(feature = "window")]
+    pub fn build_hwnd(self, hwnd: isize,hinstance: isize) -> Result<HwndRenderTarget, ()> {
+        use libc::c_void;
+
+        let buffer = match self.buffer {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let physical_device = match self.physical_device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let device = match self.device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let instance = match self.instance {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let queue = match self.queue {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let frame_buffer = match self.frame_buffer {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let renderpass = match self.renderpass {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let pipeline = match self.pipeline {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let surface = surface::Surface::create_for_win32(&instance, hwnd as *const c_void, hinstance as *const c_void);
+        
+        Ok(HwndRenderTarget {
+            instance,
+            buffer,
+            logical_device: device,
+            physical_device,
+            queue,
+            frame_buffer,
+            render_pass: renderpass,
+            pipeline,
+            image: self.image,
+            surface
+        })
     }
 
     pub fn build_png(self, file_path: &str) -> Result<PngRenderTarget, ()> {
