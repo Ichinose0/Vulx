@@ -3,7 +3,7 @@ use ash::vk::{
     ImageViewCreateInfo, ImageViewType, SurfaceFormatKHR, SwapchainKHR,
 };
 
-use crate::{LogicalDevice, ImageView};
+use crate::{ImageView, LogicalDevice};
 
 pub struct AcquireImageResult {
     pub state: SwapchainState,

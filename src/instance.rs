@@ -31,7 +31,7 @@ impl<'a> InstanceBuilder<'a> {
         let mut exts = vec![];
         for i in self.targets {
             match i {
-                InstanceTarget::Image => {},
+                InstanceTarget::Image => {}
                 InstanceTarget::Window => {
                     #[cfg(target_os = "windows")]
                     {
@@ -40,11 +40,13 @@ impl<'a> InstanceBuilder<'a> {
                     }
                 }
             }
-        };
-        for i in &exts {
-            println!("{}",unsafe { CStr::from_ptr(*i).to_str().unwrap() });
         }
-        let create_info = InstanceCreateInfo::builder().enabled_extension_names(&exts).build();
+        for i in &exts {
+            println!("{}", unsafe { CStr::from_ptr(*i).to_str().unwrap() });
+        }
+        let create_info = InstanceCreateInfo::builder()
+            .enabled_extension_names(&exts)
+            .build();
         let inner = unsafe { self.entry.create_instance(&create_info, None).unwrap() };
         Instance {
             inner,

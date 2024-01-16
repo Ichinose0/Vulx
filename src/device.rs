@@ -1,9 +1,13 @@
-use ash::{vk::{
+use ash::vk::{
     CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandPool,
-    CommandPoolCreateInfo, DeviceQueueCreateInfo, ShaderModuleCreateInfo, ImageUsageFlags, SharingMode, CommandPoolCreateFlags,
-}};
+    CommandPoolCreateFlags, CommandPoolCreateInfo, DeviceQueueCreateInfo, ImageUsageFlags,
+    ShaderModuleCreateInfo, SharingMode,
+};
 
-use crate::{Queue, Shader, ShaderKind, Spirv, Instance, PhysicalDevice, target::surface::Surface,target::swapchain::Swapchain};
+use crate::{
+    target::surface::Surface, target::swapchain::Swapchain, Instance, PhysicalDevice, Pipeline,
+    Queue, RenderPass, Shader, ShaderKind, Spirv,
+};
 
 /// Represents a logical device.
 pub struct LogicalDevice {
@@ -100,5 +104,31 @@ impl LogicalDevice {
             Err(_) => panic!("Err"),
         };
         Ok(Swapchain { inner, khr, format })
+    }
+
+    pub fn destroy_command_buffer(&self, buffer: &crate::target::CommandBuffer) {
+        unsafe {
+            self.inner.destroy_command_pool(buffer.command_pool, None);
+        }
+    }
+
+    pub fn destroy_render_pass(&self, render_pass: &RenderPass) {
+        unsafe {
+            self.inner.destroy_render_pass(render_pass.inner, None);
+        }
+    }
+
+    pub fn destroy_pipeline(&self, pipeline: &Pipeline) {
+        unsafe {
+            self.inner.destroy_pipeline(pipeline.inner, None);
+        }
+    }
+}
+
+impl Drop for LogicalDevice {
+    fn drop(&mut self) {
+        unsafe {
+            self.inner.destroy_device(None);
+        }
     }
 }

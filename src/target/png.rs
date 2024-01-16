@@ -62,13 +62,13 @@ impl RenderTarget for PngRenderTarget {
         }
     }
 
-    fn fill<P>(&self, path: P, color: crate::Color, thickness: f64)
+    fn fill<P>(&mut self, path: &mut P, color: crate::Color, thickness: f64)
     where
         P: IntoPath,
     {
     }
 
-    fn stroke<P>(&self, path: P, color: crate::Color, thickness: f64)
+    fn stroke<P>(&mut self, path: P, color: crate::Color, thickness: f64)
     where
         P: IntoPath,
     {

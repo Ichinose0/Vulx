@@ -105,7 +105,8 @@ impl Buffer {
 
             device
                 .inner
-                .flush_mapped_memory_ranges(&[mapped_memory_range]);
+                .flush_mapped_memory_ranges(&[mapped_memory_range])
+                .unwrap();
             device.inner.unmap_memory(memory);
         }
         Self { buffer }
@@ -114,6 +115,7 @@ impl Buffer {
 
 pub struct Path {
     pub(crate) buffer: Buffer,
+    pub(crate) size: usize,
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
@@ -147,12 +149,15 @@ impl PathGeometry {
 
 impl IntoPath for PathGeometry {
     fn into_path(
-        mut self,
+        &mut self,
         instance: &Instance,
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
         let buffer = Buffer::new(&mut self.vertices[0], instance, physical_device, device);
-        Path { buffer }
+        Path {
+            buffer,
+            size: self.vertex(),
+        }
     }
 }

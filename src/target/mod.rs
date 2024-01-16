@@ -1,10 +1,10 @@
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
 mod hwnd;
-#[cfg(feature = "window")]
-pub(crate) mod swapchain;
 mod png;
 pub(crate) mod surface;
+#[cfg(feature = "window")]
+pub(crate) mod swapchain;
 use ash::vk::{CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, SubmitInfo};
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
@@ -79,11 +79,11 @@ impl RenderTargetBuilder {
 
     #[cfg(target_os = "windows")]
     #[cfg(feature = "window")]
-    pub fn build_hwnd(self, hwnd: isize,hinstance: isize) -> Result<HwndRenderTarget, ()> {
+    pub fn build_hwnd(self, hwnd: isize, hinstance: isize) -> Result<HwndRenderTarget, ()> {
         use ash::vk::FenceCreateInfo;
         use libc::c_void;
 
-        use crate::{SubPass, Spirv, ShaderKind};
+        use crate::{ShaderKind, Spirv, SubPass};
 
         let buffer = match self.buffer {
             Some(b) => b,
@@ -105,54 +105,51 @@ impl RenderTargetBuilder {
             Some(b) => b,
             None => return Err(()),
         };
-        let frame_buffer = match self.frame_buffer {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let renderpass = match self.renderpass {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let pipeline = match self.pipeline {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let surface = surface::Surface::create_for_win32(&instance, hwnd as *const c_void, hinstance as *const c_void);
+        let surface = surface::Surface::create_for_win32(
+            &instance,
+            hwnd as *const c_void,
+            hinstance as *const c_void,
+        );
         println!("Create surface");
-        let swapchain = device.create_swapchain(&instance, physical_device, &surface).unwrap();
+        let swapchain = device
+            .create_swapchain(&instance, physical_device, &surface)
+            .unwrap();
         let subpasses = vec![SubPass::new()];
 
-    let render_pass = RenderPass::new(&device, &subpasses);
+        let render_pass = RenderPass::new(&device, &subpasses);
 
-    let mut frame_buffers = vec![];
-    let image_view = swapchain.get_image(&device).unwrap();
+        let mut frame_buffers = vec![];
+        let image_view = swapchain.get_image(&device).unwrap();
 
-    for i in image_view {
-        frame_buffers.push(
-            i.create_frame_buffer(&device, &render_pass, &self.image.unwrap())
-                .unwrap(),
-        );
-    }
+        for i in image_view {
+            frame_buffers.push(
+                i.create_frame_buffer(&device, &render_pass, &self.image.unwrap())
+                    .unwrap(),
+            );
+        }
 
-    
-    let fragment_shader = device
-        .create_shader_module(
-            Spirv::new("examples/shader/shader.frag.spv"),
-            ShaderKind::Fragment,
-        )
-        .unwrap();
-    let vertex_shader = device
-        .create_shader_module(
-            Spirv::new("examples/shader/shader.vert.spv"),
-            ShaderKind::Vertex,
-        )
-        .unwrap();
+        let fragment_shader = device
+            .create_shader_module(
+                Spirv::new("examples/shader/shader.frag.spv"),
+                ShaderKind::Fragment,
+            )
+            .unwrap();
+        let vertex_shader = device
+            .create_shader_module(
+                Spirv::new("examples/shader/shader.vert.spv"),
+                ShaderKind::Vertex,
+            )
+            .unwrap();
 
-    let pipeline = render_pass
-        .create_pipeline(&self.image.unwrap(), &device, &[fragment_shader, vertex_shader])
-        .unwrap();
-    let create_info = FenceCreateInfo::builder().build();
-    let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
+        let pipeline = render_pass
+            .create_pipeline(
+                &self.image.unwrap(),
+                &device,
+                &[fragment_shader, vertex_shader],
+            )
+            .unwrap();
+        let create_info = FenceCreateInfo::builder().build();
+        let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
         Ok(HwndRenderTarget {
             instance,
             buffer,
@@ -160,13 +157,16 @@ impl RenderTargetBuilder {
             physical_device,
             queue,
             frame_buffers,
-            render_pass: renderpass,
+            render_pass,
             pipeline: pipeline[0],
             image: self.image,
             surface,
             swapchain,
             fence,
-            img_index: 0
+            img_index: 0,
+            vertex: 0,
+            buffers: vec![],
+            offsets: vec![],
         })
     }
 
@@ -235,7 +235,7 @@ impl Default for RenderTargetBuilder {
 }
 
 pub struct CommandBuffer {
-    command_pool: CommandPool,
+    pub(crate) command_pool: CommandPool,
     cmd_buffers: Vec<ash::vk::CommandBuffer>,
 }
 

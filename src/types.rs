@@ -157,10 +157,10 @@ pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
 
 pub trait RenderTarget {
     fn begin(&mut self);
-    fn fill<P>(&self, path: P, color: Color, thickness: f64)
+    fn fill<P>(&mut self, path: &mut P, color: Color, thickness: f64)
     where
         P: IntoPath;
-    fn stroke<P>(&self, path: P, color: Color, thickness: f64)
+    fn stroke<P>(&mut self, path: P, color: Color, thickness: f64)
     where
         P: IntoPath;
     fn end(&mut self);
@@ -170,7 +170,7 @@ pub trait RenderTarget {
 
 pub trait IntoPath {
     fn into_path(
-        self,
+        &mut self,
         instance: &Instance,
         phsyical_device: PhysicalDevice,
         device: &LogicalDevice,

@@ -1,13 +1,13 @@
 use std::ffi::c_void;
 
-use ash::vk::SurfaceKHR;
 use crate::Instance;
+use ash::vk::SurfaceKHR;
 
 #[cfg(target_os = "windows")]
-    #[cfg(feature = "window")]
+#[cfg(feature = "window")]
 pub type HWND = *const c_void;
 #[cfg(target_os = "windows")]
-    #[cfg(feature = "window")]
+#[cfg(feature = "window")]
 pub type HINSTANCE = *const c_void;
 
 pub struct Surface {
