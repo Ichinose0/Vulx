@@ -91,8 +91,6 @@ impl Buffer {
                     MemoryMapFlags::empty(),
                 )
                 .unwrap();
-            println!("{:?}",write_mem);
-            println!("{:?}", vertices);
             libc::memcpy(
                 write_mem,
                 vertices.as_ptr() as *const c_void,
@@ -130,11 +128,20 @@ impl PathGeometry {
         }
     }
 
-    pub fn triangle(mut self, vert: Vec3<Vec2<f32>>) -> Self {
+    pub fn triangle(&mut self, vert: Vec3<Vec2<f32>>) {
         for i in vert {
             self.vertices[0].push(i);
         }
-        self
+    }
+
+    pub fn vertex(&self) -> usize {
+        let mut size = 0;
+        for v in &self.vertices {
+            for _ in v {
+                size += 1;
+            }
+        }
+        size
     }
 }
 

@@ -81,13 +81,14 @@ impl RenderTarget for PngRenderTarget {
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
-            let path = PathGeometry::new()
-                .triangle(Vec3::new(
-                    Vec2::new(0.0, -0.5),
-                    Vec2::new(0.5, 0.5),
-                    Vec2::new(-0.5, 0.8),
-                ))
-                .into_path(&self.instance, self.physical_device, &self.logical_device);
+            let mut path = PathGeometry::new();
+            path.triangle(Vec3::new(
+                Vec2::new(0.0, -0.5),
+                Vec2::new(0.5, 0.5),
+                Vec2::new(-0.5, 0.8),
+            ));
+            let size = path.vertex();
+            let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
@@ -98,7 +99,7 @@ impl RenderTarget for PngRenderTarget {
 
             self.logical_device
                 .inner
-                .cmd_draw(self.buffer.cmd_buffers[0], 3, 1, 0, 0);
+                .cmd_draw(self.buffer.cmd_buffers[0], size as u32, 1, 0, 0);
             self.logical_device
                 .inner
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
