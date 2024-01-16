@@ -1,5 +1,14 @@
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+mod hwnd;
+#[cfg(feature = "window")]
+pub(crate) mod swapchain;
 mod png;
+pub(crate) mod surface;
 use ash::vk::{CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, SubmitInfo};
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+pub use hwnd::*;
 pub use png::*;
 
 use crate::{
@@ -66,6 +75,99 @@ impl RenderTargetBuilder {
     pub fn image(mut self, image: Option<Image>) -> Self {
         self.image = image;
         self
+    }
+
+    #[cfg(target_os = "windows")]
+    #[cfg(feature = "window")]
+    pub fn build_hwnd(self, hwnd: isize,hinstance: isize) -> Result<HwndRenderTarget, ()> {
+        use ash::vk::FenceCreateInfo;
+        use libc::c_void;
+
+        use crate::{SubPass, Spirv, ShaderKind};
+
+        let buffer = match self.buffer {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let physical_device = match self.physical_device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let device = match self.device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let instance = match self.instance {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let queue = match self.queue {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let frame_buffer = match self.frame_buffer {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let renderpass = match self.renderpass {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let pipeline = match self.pipeline {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let surface = surface::Surface::create_for_win32(&instance, hwnd as *const c_void, hinstance as *const c_void);
+        println!("Create surface");
+        let swapchain = device.create_swapchain(&instance, physical_device, &surface).unwrap();
+        let subpasses = vec![SubPass::new()];
+
+    let render_pass = RenderPass::new(&device, &subpasses);
+
+    let mut frame_buffers = vec![];
+    let image_view = swapchain.get_image(&device).unwrap();
+
+    for i in image_view {
+        frame_buffers.push(
+            i.create_frame_buffer(&device, &render_pass, &self.image.unwrap())
+                .unwrap(),
+        );
+    }
+
+    
+    let fragment_shader = device
+        .create_shader_module(
+            Spirv::new("examples/shader/shader.frag.spv"),
+            ShaderKind::Fragment,
+        )
+        .unwrap();
+    let vertex_shader = device
+        .create_shader_module(
+            Spirv::new("examples/shader/shader.vert.spv"),
+            ShaderKind::Vertex,
+        )
+        .unwrap();
+
+    let pipeline = render_pass
+        .create_pipeline(&self.image.unwrap(), &device, &[fragment_shader, vertex_shader])
+        .unwrap();
+    let create_info = FenceCreateInfo::builder().build();
+    let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
+        Ok(HwndRenderTarget {
+            instance,
+            buffer,
+            logical_device: device,
+            physical_device,
+            queue,
+            frame_buffers,
+            render_pass: renderpass,
+            pipeline: pipeline[0],
+            image: self.image,
+            surface,
+            swapchain,
+            fence,
+            img_index: 0
+        })
     }
 
     pub fn build_png(self, file_path: &str) -> Result<PngRenderTarget, ()> {

@@ -1,3 +1,5 @@
+use std::ffi::{c_char, CStr};
+
 use crate::{LogicalDevice, PhysicalDevice, QueueProperties};
 use ash::{
     vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
@@ -26,7 +28,23 @@ impl<'a> InstanceBuilder<'a> {
     }
 
     pub fn build(self) -> Instance {
-        let create_info = InstanceCreateInfo::builder().build();
+        let mut exts = vec![];
+        for i in self.targets {
+            match i {
+                InstanceTarget::Image => {},
+                InstanceTarget::Window => {
+                    #[cfg(target_os = "windows")]
+                    {
+                        exts.push(ash::extensions::khr::Surface::name().as_ptr());
+                        exts.push(ash::extensions::khr::Win32Surface::name().as_ptr());
+                    }
+                }
+            }
+        };
+        for i in &exts {
+            println!("{}",unsafe { CStr::from_ptr(*i).to_str().unwrap() });
+        }
+        let create_info = InstanceCreateInfo::builder().enabled_extension_names(&exts).build();
         let inner = unsafe { self.entry.create_instance(&create_info, None).unwrap() };
         Instance {
             inner,
@@ -53,7 +71,7 @@ pub enum InstanceTarget {
 
 pub struct Instance {
     pub(crate) inner: ash::Instance,
-    entry: Entry,
+    pub(crate) entry: Entry,
 }
 
 impl Instance {
@@ -89,6 +107,7 @@ impl Instance {
             .build()];
         let create_info = DeviceCreateInfo::builder()
             .queue_create_infos(&queue_infos)
+            .enabled_extension_names(&[ash::extensions::khr::Swapchain::name().as_ptr()])
             .build();
         let inner = unsafe { self.inner.create_device(device.0, &create_info, None) }.unwrap();
         LogicalDevice { inner }
