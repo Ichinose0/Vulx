@@ -1,6 +1,7 @@
 use Vulx::{
     target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
-    ImageBuilder, InstanceBuilder, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass,
+    IntoPath,
+    ImageBuilder, InstanceBuilder, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, geometry::PathGeometry, Vec3, Vec2,
 };
 
 fn main() {
@@ -68,6 +69,13 @@ fn main() {
         .unwrap();
 
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
+
+
+    let vec3 = Vec3::new(Vec2::new(0.0,-0.5),Vec2::new(0.5,0.5),Vec2::new(-0.5,0.5));
+    for i in vec3 {
+        println!("{:?}",i);
+    }
+    //let path = PathGeometry::new().triangle(Vec3::new(Vec2::new(0.0,-0.5),Vec2::new(0.5,0.5),Vec2::new(-0.5,0.5))).into_path(&instance, physical_devices[suitable_device.unwrap()], &device);
 
     let render_target = RenderTargetBuilder::new()
         .instance(instance)

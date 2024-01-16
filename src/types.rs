@@ -1,8 +1,8 @@
 //! Type definitions used in Vulx
 
 use crate::{
-    geometry::{Line, PathGeometry},
-    Image,
+    geometry::{Line, PathGeometry, Path},
+    Image, LogicalDevice, Instance,
 };
 
 
@@ -18,11 +18,30 @@ impl<T> Vec2<T> {
 
 /// Vector type with fixed number of elements at 3
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec3<T>(T, T, T);
+pub struct Vec3<T>(T, T, T,usize)where T: Clone+Copy;
 
-impl<T> Vec3<T> {
+impl<T> Vec3<T> 
+where T: Clone+Copy
+{
     pub fn new(a: T, b: T, c: T) -> Self {
-        Self(a, b, c)
+        Self(a, b, c,0)
+    }
+}
+
+impl<T> Iterator for Vec3<T> 
+where T: Clone+Copy
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = match self.3 {
+            0 => Some(self.0),
+            1 => Some(self.1),
+            2 => Some(self.2),
+            _ => None
+        };
+        self.3+=1;
+        result
     }
 }
 
@@ -63,5 +82,5 @@ pub trait RenderTarget {
 }
 
 pub trait IntoPath {
-    fn into(self,instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Path;
+    fn into_path(self,instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Path;
 }

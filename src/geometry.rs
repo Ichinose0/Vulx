@@ -1,5 +1,7 @@
-use crate::{Vec3,Vec2,LogicalDevice};
-use ash::vk::BufferCreateInfo;
+use std::ffi::c_void;
+
+use crate::{Vec3,Vec2,LogicalDevice, Instance, PhysicalDevice, IntoPath};
+use ash::vk::{BufferCreateInfo, MemoryAllocateInfo, MemoryPropertyFlags, MappedMemoryRange, MemoryMapFlags};
 
 /// # Represents a line segment
 /// ## Members
@@ -34,17 +36,16 @@ pub(crate) struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(vertices: &[&[Vec2<f64>]],instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
-        let vertices = &vertices[0];
-        let create_info = BufferCreateInfo::builder().size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).usage(ash::vk::BufferUsageFlag::VERTEX_BUFFER).sharing_mode(ash::vk::SharingMode::EXCLUSIVE).build();
-        let buffer = unsafe { device.inner.create_buffer(&create_info) }.unwrap();
+    pub fn new(vertices: &mut [Vec2<f64>],instance: &Instance,physical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
+        let create_info = BufferCreateInfo::builder().size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER).sharing_mode(ash::vk::SharingMode::EXCLUSIVE).build();
+        let buffer = unsafe { device.inner.create_buffer(&create_info,None) }.unwrap();
         let mem_prop = unsafe {
             instance
                 .inner
                 .get_physical_device_memory_properties(physical_device.0)
         };
 
-        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(inner) };
+        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(buffer) };
         let mut create_info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
 
         let mut suitable_memory_found = false;
@@ -71,11 +72,12 @@ impl Buffer {
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
-            write_mem = device.inner.map_memory(memory,0,(std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64);
+            write_mem = device.inner.map_memory(memory,0,(std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64,MemoryMapFlags::empty()).unwrap();
+            
+            let mapped_memory_range = MappedMemoryRange::builder().memory(memory).offset(0).size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).build();
             write_mem = vertices.as_mut_ptr() as *mut c_void;
-            let mapped_memory_range = MappedMemoryRange::builder().memory(write_mem).offset(0).size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).build();
-            device.flush_mapped_memory_ranges(&[mapped_memory_range]);
-            device.inner.unmap_memory(write_mem);
+            device.inner.flush_mapped_memory_ranges(&[mapped_memory_range]);
+            device.inner.unmap_memory(memory);
         }
         Self {
             buffer
@@ -99,14 +101,17 @@ impl PathGeometry {
         }
     }
 
-    pub fn triangle(mut self,vert: Vec3<Vec2<f64>>>) -> Self {
+    pub fn triangle(mut self,vert: Vec3<Vec2<f64>>) -> Self {
+        for i in 0..2 {
+            
+        }
         self
     }
 }
 
 impl IntoPath for PathGeometry {
-    fn into(self,instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Path {
-        let buffer = Buffer::new(&self.vertices,instance,physical_device,device);
+    fn into_path(mut self,instance: &Instance,physical_device: PhysicalDevice,device: &LogicalDevice) -> Path {
+        let buffer = Buffer::new(&mut self.vertices[0],instance,physical_device,device);
         Path {
             buffer
         }
