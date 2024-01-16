@@ -3,8 +3,6 @@ use std::io::{Cursor, Read};
 
 use crate::Vec2;
 
-pub type Vertices = Vec<Vec2<f64>>;
-
 ///Indicates shader type
 ///
 /// # Value Meaning
