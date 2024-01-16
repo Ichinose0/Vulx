@@ -34,7 +34,8 @@ pub(crate) struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(vertices: &[Vec2<f64>],instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
+    pub fn new(vertices: &[&[Vec2<f64>]],instance: &Instance,phsyical_device: PhysicalDevice,device: &LogicalDevice) -> Self {
+        let vertices = &vertices[0];
         let create_info = BufferCreateInfo::builder().size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).usage(ash::vk::BufferUsageFlag::VERTEX_BUFFER).sharing_mode(ash::vk::SharingMode::EXCLUSIVE).build();
         let buffer = unsafe { device.inner.create_buffer(&create_info) }.unwrap();
         let mem_prop = unsafe {
@@ -66,9 +67,15 @@ impl Buffer {
         }
 
         let memory;
+        let mut write_mem;
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
+            write_mem = device.inner.map_memory(memory,0,(std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64);
+            write_mem = vertices.as_mut_ptr() as *mut c_void;
+            let mapped_memory_range = MappedMemoryRange::builder().memory(write_mem).offset(0).size((std::mem::size_of::<Vec2<f64>>()*vertices.len()) as u64).build();
+            device.flush_mapped_memory_ranges(&[mapped_memory_range]);
+            device.inner.unmap_memory(write_mem);
         }
         Self {
             buffer
@@ -82,7 +89,7 @@ pub struct Path {
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 pub struct PathGeometry {
-    vertices: Vec<Vec2<f64>>
+    vertices: Vec<Vec<Vec2<f64>>>
 }
 
 impl PathGeometry {
