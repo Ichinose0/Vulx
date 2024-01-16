@@ -55,10 +55,12 @@ fn main() {
 
     let mut triangle = PathGeometry::new();
     triangle.triangle(Vec3::new(
-        Vec2::new(0.0, -0.5),
-        Vec2::new(0.5, 0.5),
-        Vec2::new(-0.5, 0.5),
+        Vec2::new(-0.8, -0.8),
+        Vec2::new(0.0, -0.8),
+        Vec2::new(-0.8, 0.3),
     ));
+
+    triangle.rectangle(Vec2::new(Vec2::new(-0.5,-0.5),Vec2::new(0.5,0.5)));
 
     let event_loop = EventLoop::new().unwrap();
 

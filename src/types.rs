@@ -1,5 +1,7 @@
 //! Type definitions used in Vulx
 
+use std::ops::Index;
+
 use crate::{
     geometry::{Line, Path, PathGeometry},
     Image, Instance, LogicalDevice,
@@ -7,7 +9,7 @@ use crate::{
 
 /// Vector type with fixed number of elements at 2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec2<T>(T, T)
+pub struct Vec2<T>(pub(crate)T, pub(crate) T)
 where
     T: Clone + Copy;
 
@@ -29,6 +31,34 @@ where
 
     pub fn as_mut_ptr(&mut self) -> *mut T {
         [self.0, self.1].as_mut_ptr()
+    }
+}
+
+impl<T> Index<usize> for Vec2<T>
+where
+    T: Clone + Copy,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.0,
+            1 => &self.1,
+            _ => panic!("Out of range.")
+        }
+    }
+}
+
+impl<T> IntoIterator for Vec2<T>
+where
+    T: Clone + Copy,
+{
+    type Item = T;
+
+    type IntoIter = Vec2Iterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
