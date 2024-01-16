@@ -8,8 +8,8 @@ use ash::vk::{
 use super::CommandBuffer;
 
 use crate::{
-    FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice, Pipeline, Queue,
-    RenderPass, RenderTarget,
+    geometry::PathGeometry, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
+    Pipeline, Queue, RenderPass, RenderTarget, Vec2, Vec3,
 };
 
 pub struct PngRenderTarget {
@@ -76,17 +76,32 @@ impl RenderTarget for PngRenderTarget {
 
     fn end(&self) {
         unsafe {
-            self.logical_device
-                .inner
-                .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
+            let path = PathGeometry::new()
+                .triangle(Vec3::new(
+                    Vec2::new(0.0, -0.5),
+                    Vec2::new(0.5, 0.5),
+                    Vec2::new(-0.5, 0.8),
+                ))
+                .into_path(&self.instance, self.physical_device, &self.logical_device);
+
+            self.logical_device.inner.cmd_bind_vertex_buffers(
+                self.buffer.cmd_buffers[0],
+                0,
+                &[path.buffer.buffer],
+                &[0],
+            );
+
             self.logical_device
                 .inner
                 .cmd_draw(self.buffer.cmd_buffers[0], 3, 1, 0, 0);
+            self.logical_device
+                .inner
+                .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
         }
         self.buffer.end(&self.logical_device);
         self.buffer.submit(&self.logical_device, self.queue);
@@ -100,7 +115,6 @@ impl RenderTarget for PngRenderTarget {
         let mut writer = encoder.write_header().unwrap();
 
         let data = self.image.unwrap().map_memory(&self.logical_device);
-
         let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, 1228800) };
         writer.write_image_data(&slice).unwrap();
         unsafe {

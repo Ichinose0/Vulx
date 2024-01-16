@@ -71,18 +71,6 @@ fn main() {
 
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
 
-    let path = PathGeometry::new()
-        .triangle(Vec3::new(
-            Vec2::new(0.0, -0.5),
-            Vec2::new(0.5, 0.5),
-            Vec2::new(-0.5, 0.5),
-        ))
-        .into_path(
-            &instance,
-            physical_devices[suitable_device.unwrap()],
-            &device,
-        );
-
     let render_target = RenderTargetBuilder::new()
         .instance(instance)
         .command_buffer(command_buffer)

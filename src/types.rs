@@ -7,7 +7,7 @@ use crate::{
 
 /// Vector type with fixed number of elements at 2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec2<T>(T, T, usize)
+pub struct Vec2<T>(T, T)
 where
     T: Clone + Copy;
 
@@ -16,30 +16,50 @@ where
     T: Clone + Copy,
 {
     pub fn new(a: T, b: T) -> Self {
-        Self(a, b, 0)
+        Self(a, b)
+    }
+
+    pub fn iter(&self) -> Vec2Iterator<T> {
+        Vec2Iterator(0, *self)
+    }
+
+    pub fn as_ptr(&self) -> *const T {
+        [self.0, self.1].as_ptr()
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        [self.0, self.1].as_mut_ptr()
     }
 }
 
-impl<T> Iterator for Vec2<T>
+pub struct Vec2Iterator<T>(usize, Vec2<T>)
+where
+    T: Clone + Copy;
+
+impl<T> Iterator for Vec2Iterator<T>
 where
     T: Clone + Copy,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.2 {
-            0 => Some(self.0),
-            1 => Some(self.1),
-            _ => None,
-        };
-        self.2 += 1;
-        result
+        if self.0 < 3 {
+            let result = match self.0 {
+                0 => Some(self.1 .0),
+                1 => Some(self.1 .1),
+                _ => None,
+            };
+            self.0 += 1;
+            result
+        } else {
+            None
+        }
     }
 }
 
 /// Vector type with fixed number of elements at 3
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec3<T>(T, T, T, usize)
+pub struct Vec3<T>(T, T, T)
 where
     T: Clone + Copy;
 
@@ -48,25 +68,58 @@ where
     T: Clone + Copy,
 {
     pub fn new(a: T, b: T, c: T) -> Self {
-        Self(a, b, c, 0)
+        Self(a, b, c)
+    }
+
+    pub fn iter(&self) -> Vec3Iterator<T> {
+        Vec3Iterator(0, *self)
+    }
+
+    pub fn as_ptr(&self) -> *const T {
+        [self.0, self.1, self.2].as_ptr()
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        [self.0, self.1, self.2].as_mut_ptr()
     }
 }
 
-impl<T> Iterator for Vec3<T>
+impl<T> IntoIterator for Vec3<T>
+where
+    T: Clone + Copy,
+{
+    type Item = T;
+
+    type IntoIter = Vec3Iterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct Vec3Iterator<T>(usize, Vec3<T>)
+where
+    T: Clone + Copy;
+
+impl<T> Iterator for Vec3Iterator<T>
 where
     T: Clone + Copy,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.3 {
-            0 => Some(self.0),
-            1 => Some(self.1),
-            2 => Some(self.2),
-            _ => None,
-        };
-        self.3 += 1;
-        result
+        if self.0 < 3 {
+            let result = match self.0 {
+                0 => Some(self.1 .0),
+                1 => Some(self.1 .1),
+                2 => Some(self.1 .2),
+                _ => None,
+            };
+            self.0 += 1;
+            result
+        } else {
+            None
+        }
     }
 }
 
@@ -82,25 +135,6 @@ where
 {
     pub fn new(a: T, b: T, c: T, d: T) -> Self {
         Self(a, b, c, d, 0)
-    }
-}
-
-impl<T> Iterator for Vec4<T>
-where
-    T: Clone + Copy,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.4 {
-            0 => Some(self.0),
-            1 => Some(self.1),
-            2 => Some(self.2),
-            3 => Some(self.3),
-            _ => None,
-        };
-        self.4 += 1;
-        result
     }
 }
 

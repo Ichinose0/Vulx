@@ -9,10 +9,11 @@ use ash::vk::{
     PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
     PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
-    SubpassDescription,
+    SubpassDescription, VertexInputAttributeDescription, VertexInputBindingDescription,
+    VertexInputRate,
 };
 
-use crate::{Image, LogicalDevice, Pipeline, Shader};
+use crate::{Image, LogicalDevice, Pipeline, Shader, Vec2};
 
 pub struct SubPass(SubpassDescription);
 
@@ -75,6 +76,19 @@ impl RenderPass {
         if shaders.is_empty() {
             return Err(());
         }
+
+        let vertex_binding_description = vec![VertexInputBindingDescription::builder()
+            .binding(0)
+            .stride(std::mem::size_of::<Vec2<f32>>() as u32)
+            .input_rate(VertexInputRate::VERTEX)
+            .build()];
+        let vertex_input_description = vec![VertexInputAttributeDescription::builder()
+            .binding(0)
+            .location(0)
+            .format(Format::R32G32B32_SFLOAT)
+            .offset(0)
+            .build()];
+
         let mut shader_stages = vec![];
         let entry = CString::new("main").unwrap();
         for i in shaders {
@@ -150,6 +164,11 @@ impl RenderPass {
             }
         };
 
+        let vertex_input_info = PipelineVertexInputStateCreateInfo::builder()
+            .vertex_binding_descriptions(&vertex_binding_description)
+            .vertex_attribute_descriptions(&vertex_input_description)
+            .build();
+
         let pipeline_create_info = GraphicsPipelineCreateInfo::builder()
             .viewport_state(&viewport_state_info)
             .vertex_input_state(&vertex_input_info)
@@ -158,6 +177,7 @@ impl RenderPass {
             .multisample_state(&multisample)
             .color_blend_state(&blend)
             .layout(pipeline_layout)
+            .vertex_input_state(&vertex_input_info)
             .stages(&[])
             .render_pass(self.inner)
             .subpass(0)

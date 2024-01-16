@@ -12,3 +12,4 @@ util = []
 [dependencies]
 ash = { version = "0.36", features = ["linked"] }
 png = "0.17.11"
+libc = "0.2.152"

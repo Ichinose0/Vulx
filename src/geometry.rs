@@ -10,8 +10,8 @@ use ash::vk::{
 /// * `start` - starting coordinate.
 /// * `end` - ending coordinate.
 pub struct Line {
-    start: Vec2<f64>,
-    end: Vec2<f64>,
+    start: Vec2<f32>,
+    end: Vec2<f32>,
 }
 
 impl Line {
@@ -20,32 +20,32 @@ impl Line {
     /// use vulx::{Line,Vec2};
     /// let line = Line::new(Vec2::new(30.0,30.0),Vec2::new(100.0,70.0));
     /// ```
-    pub fn new(start: Vec2<f64>, end: Vec2<f64>) -> Self {
+    pub fn new(start: Vec2<f32>, end: Vec2<f32>) -> Self {
         Self { start, end }
     }
 
-    pub fn start(&self) -> Vec2<f64> {
+    pub fn start(&self) -> Vec2<f32> {
         self.start
     }
 
-    pub fn end(&self) -> Vec2<f64> {
+    pub fn end(&self) -> Vec2<f32> {
         self.end
     }
 }
 
 pub(crate) struct Buffer {
-    buffer: ash::vk::Buffer,
+    pub(crate) buffer: ash::vk::Buffer,
 }
 
 impl Buffer {
     pub fn new(
-        vertices: &mut [Vec2<f64>],
+        vertices: &mut [Vec2<f32>],
         instance: &Instance,
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Self {
         let create_info = BufferCreateInfo::builder()
-            .size((std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64)
+            .size((std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64)
             .usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER)
             .sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
             .build();
@@ -79,26 +79,32 @@ impl Buffer {
         }
 
         let memory;
-        let mut write_mem;
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
-            write_mem = device
+            let write_mem = device
                 .inner
                 .map_memory(
                     memory,
                     0,
-                    (std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64,
+                    (std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64,
                     MemoryMapFlags::empty(),
                 )
                 .unwrap();
+            println!("{:?}",write_mem);
+            println!("{:?}", vertices);
+            libc::memcpy(
+                write_mem,
+                vertices.as_ptr() as *const c_void,
+                (std::mem::size_of::<Vec2<f32>>() * vertices.len()) as usize,
+            );
 
             let mapped_memory_range = MappedMemoryRange::builder()
                 .memory(memory)
                 .offset(0)
-                .size((std::mem::size_of::<Vec2<f64>>() * vertices.len()) as u64)
+                .size((std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64)
                 .build();
-            write_mem = vertices.as_mut_ptr() as *mut c_void;
+
             device
                 .inner
                 .flush_mapped_memory_ranges(&[mapped_memory_range]);
@@ -109,12 +115,12 @@ impl Buffer {
 }
 
 pub struct Path {
-    buffer: Buffer,
+    pub(crate) buffer: Buffer,
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 pub struct PathGeometry {
-    vertices: Vec<Vec<Vec2<f64>>>,
+    vertices: Vec<Vec<Vec2<f32>>>,
 }
 
 impl PathGeometry {
@@ -124,7 +130,7 @@ impl PathGeometry {
         }
     }
 
-    pub fn triangle(mut self, vert: Vec3<Vec2<f64>>) -> Self {
+    pub fn triangle(mut self, vert: Vec3<Vec2<f32>>) -> Self {
         for i in vert {
             self.vertices[0].push(i);
         }
