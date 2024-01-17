@@ -41,9 +41,7 @@ impl<'a> InstanceBuilder<'a> {
                 }
             }
         }
-        for i in &exts {
-            println!("{}", unsafe { CStr::from_ptr(*i).to_str().unwrap() });
-        }
+
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&exts)
             .build();

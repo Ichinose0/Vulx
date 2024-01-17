@@ -9,7 +9,7 @@ use crate::{
 
 /// Vector type with fixed number of elements at 2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec2<T>(pub(crate)T, pub(crate) T)
+pub struct Vec2<T>(pub(crate) T, pub(crate) T)
 where
     T: Clone + Copy;
 
@@ -44,7 +44,7 @@ where
         match index {
             0 => &self.0,
             1 => &self.1,
-            _ => panic!("Out of range.")
+            _ => panic!("Out of range."),
         }
     }
 }
@@ -125,7 +125,7 @@ where
             0 => &self.0,
             1 => &self.1,
             2 => &self.2,
-            _ => panic!("Out of range.")
+            _ => panic!("Out of range."),
         }
     }
 }
@@ -171,7 +171,7 @@ where
 
 /// Vector type with fixed number of elements at 4
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec4<T>(T, T, T, T, usize)
+pub struct Vec4<T>(T, T, T, T)
 where
     T: Clone + Copy;
 
@@ -180,7 +180,11 @@ where
     T: Clone + Copy,
 {
     pub fn new(a: T, b: T, c: T, d: T) -> Self {
-        Self(a, b, c, d, 0)
+        Self(a, b, c, d)
+    }
+
+    pub fn iter(&self) -> Vec4Iterator<T> {
+        Vec4Iterator(0, *self)
     }
 }
 
@@ -195,8 +199,48 @@ where
             0 => &self.0,
             1 => &self.1,
             2 => &self.2,
-            3 => &self.3
-            _ => panic!("Out of range.")
+            3 => &self.3,
+            _ => panic!("Out of range."),
+        }
+    }
+}
+
+impl<T> IntoIterator for Vec4<T>
+where
+    T: Clone + Copy,
+{
+    type Item = T;
+
+    type IntoIter = Vec4Iterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct Vec4Iterator<T>(usize, Vec4<T>)
+where
+    T: Clone + Copy;
+
+impl<T> Iterator for Vec4Iterator<T>
+where
+    T: Clone + Copy,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0 < 3 {
+            let result = match self.0 {
+                0 => Some(self.1 .0),
+                1 => Some(self.1 .1),
+                2 => Some(self.1 .2),
+                3 => Some(self.1 .3),
+                _ => None,
+            };
+            self.0 += 1;
+            result
+        } else {
+            None
         }
     }
 }

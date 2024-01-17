@@ -1,3 +1,5 @@
+#![feature(offset_of)]
+
 mod device;
 pub mod geometry;
 mod image;

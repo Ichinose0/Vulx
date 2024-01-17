@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3};
+use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3, Vec4};
 use ash::vk::{
     BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
 };
@@ -39,13 +39,13 @@ pub(crate) struct Buffer {
 
 impl Buffer {
     pub fn new(
-        vertices: &mut [Vec2<f32>],
+        vertices: &mut [VertexData],
         instance: &Instance,
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Self {
         let create_info = BufferCreateInfo::builder()
-            .size((std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64)
+            .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
             .usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER)
             .sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
             .build();
@@ -87,20 +87,20 @@ impl Buffer {
                 .map_memory(
                     memory,
                     0,
-                    (std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64,
+                    (std::mem::size_of::<VertexData>() * vertices.len()) as u64,
                     MemoryMapFlags::empty(),
                 )
                 .unwrap();
             libc::memcpy(
                 write_mem,
                 vertices.as_ptr() as *const c_void,
-                (std::mem::size_of::<Vec2<f32>>() * vertices.len()) as usize,
+                std::mem::size_of::<VertexData>() * vertices.len(),
             );
 
             let mapped_memory_range = MappedMemoryRange::builder()
                 .memory(memory)
                 .offset(0)
-                .size((std::mem::size_of::<Vec2<f32>>() * vertices.len()) as u64)
+                .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
                 .build();
 
             device
@@ -118,47 +118,50 @@ pub struct Path {
     pub(crate) size: usize,
 }
 
+#[derive(Debug)]
+pub(crate) struct VertexData {
+    pub(crate) pos: Vec4<f32>,
+    pub(crate) color: Vec4<f32>,
+}
+
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 pub struct PathGeometry {
-    vertices: Vec<Vec<Vec2<f32>>>,
+    vertices: Vec<VertexData>,
 }
 
 impl PathGeometry {
     pub fn new() -> Self {
-        Self {
-            vertices: vec![vec![]],
+        Self { vertices: vec![] }
+    }
+
+    pub fn triangle(&mut self, vert: Vec3<Vec4<f32>>, color: Vec3<Vec4<f32>>) {
+        for i in 0..3 {
+            self.vertices.push(VertexData {
+                pos: vert[i],
+                color: color[i],
+            })
         }
     }
 
-    pub fn triangle(&mut self, vert: Vec3<Vec2<f32>>) {
-        for i in vert {
-            self.vertices[0].push(i);
-        }
+    pub fn rectangle(&mut self, vert: Vec2<Vec4<f32>>) {
+        // self.vertices[0].push(vert[0]);
+        // self.vertices[0].push(vert[1]);
+        // self.vertices[0].push(Vec2::new(vert[0].0,vert[1].1));
+        // self.vertices[0].push(vert[1]);
+        // self.vertices[0].push(vert[0]);
+        // self.vertices[0].push(Vec2::new(vert[1].0,vert[0].1));
     }
 
-    pub fn rectangle(&mut self,vert: Vec2<Vec2<f32>>) {
-        self.vertices[0].push(vert[0]);
-        self.vertices[0].push(vert[1]);
-        self.vertices[0].push(Vec2::new(vert[0].0,vert[1].1));
-        self.vertices[0].push(vert[1]);
-        self.vertices[0].push(vert[0]);
-        self.vertices[0].push(Vec2::new(vert[1].0,vert[0].1));
-    }
-
-    pub fn geometries(&mut self,vertices: Vec<Vec2<f32>>) {
-        for i in vertices {
-            self.vertices[0].push(i);
+    pub fn geometries(&mut self, vertices: Vec<Vec4<f32>>, color: Vec<Vec4<f32>>) {
+        for pos in vertices {
+            for color in &color {
+                self.vertices.push(VertexData { pos, color: *color })
+            }
         }
     }
 
     pub fn size(&self) -> usize {
-        let mut size = 0;
-        for v in &self.vertices {
-            for _ in v {
-                size += 1;
-            }
-        }
-        size
+        3
     }
 }
 
@@ -169,10 +172,10 @@ impl IntoPath for PathGeometry {
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
-        let buffer = Buffer::new(&mut self.vertices[0], instance, physical_device, device);
+        let buffer = Buffer::new(&mut self.vertices, instance, physical_device, device);
         Path {
             buffer,
-            size: self.vertex(),
+            size: self.size(),
         }
     }
 }

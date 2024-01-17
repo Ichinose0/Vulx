@@ -8,10 +8,18 @@ use Vulx::{
     geometry::PathGeometry,
     target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
     Color, ImageBuilder, InstanceBuilder, InstanceTarget, IntoPath, RenderPass, RenderTarget,
-    ShaderKind, Spirv, SubPass, Vec2, Vec3,
+    ShaderKind, Spirv, SubPass, Vec2, Vec3, Vec4,
 };
 
 fn main() {
+    let event_loop = EventLoop::new().unwrap();
+
+    let window = WindowBuilder::new()
+        .with_title("Vulx")
+        .with_inner_size(winit::dpi::LogicalSize::new(640.0, 480.0))
+        .build(&event_loop)
+        .unwrap();
+    let win_size = window.inner_size();
     let instance = InstanceBuilder::new()
         .targets(vec![InstanceTarget::Window])
         .build();
@@ -45,30 +53,30 @@ fn main() {
     );
     let queue = device.get_queue(queue_family_index);
 
-    let image = ImageBuilder::new().width(640).height(480).build(
-        &instance,
-        physical_devices[suitable_device.unwrap()],
-        &device,
-    );
+    let image = ImageBuilder::new()
+        .width(win_size.width)
+        .height(win_size.height)
+        .build(
+            &instance,
+            physical_devices[suitable_device.unwrap()],
+            &device,
+        );
 
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
 
     let mut triangle = PathGeometry::new();
-    triangle.triangle(Vec3::new(
-        Vec2::new(-0.8, -0.8),
-        Vec2::new(0.0, -0.8),
-        Vec2::new(-0.8, 0.3),
-    ));
-
-    triangle.rectangle(Vec2::new(Vec2::new(-0.5,-0.5),Vec2::new(0.5,0.5)));
-
-    let event_loop = EventLoop::new().unwrap();
-
-    let window = WindowBuilder::new()
-        .with_title("Vulx")
-        .with_inner_size(winit::dpi::LogicalSize::new(640.0, 480.0))
-        .build(&event_loop)
-        .unwrap();
+    triangle.triangle(
+        Vec3::new(
+            Vec4::new(0.0, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, 0.5, 0.0, 1.0),
+            Vec4::new(-0.5, 0.5, 0.0, 1.0),
+        ),
+        Vec3::new(
+            Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(0.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 1.0, 1.0),
+        ),
+    );
 
     let window_handle = window.window_handle().unwrap();
 
@@ -85,6 +93,8 @@ fn main() {
         _ => todo!(),
     };
 
+    window.pre_present_notify();
+
     event_loop.run(move |event, elwt| {
         match event {
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
@@ -95,13 +105,14 @@ fn main() {
                     render_target.begin();
                     render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
                     render_target.end();
+                }
+                WindowEvent::Resized(size) => {
                     window.pre_present_notify();
                 }
                 _ => (),
             },
-            Event::AboutToWait => {
-                window.request_redraw();
-            }
+
+            Event::AboutToWait => {}
 
             _ => (),
         }

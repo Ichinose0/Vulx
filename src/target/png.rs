@@ -9,7 +9,7 @@ use super::CommandBuffer;
 
 use crate::{
     geometry::PathGeometry, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
-    Pipeline, Queue, RenderPass, RenderTarget, Vec2, Vec3,
+    Pipeline, Queue, RenderPass, RenderTarget, Vec2, Vec3, Vec4,
 };
 
 pub struct PngRenderTarget {
@@ -82,12 +82,19 @@ impl RenderTarget for PngRenderTarget {
                 self.pipeline.inner,
             );
             let mut path = PathGeometry::new();
-            path.triangle(Vec3::new(
-                Vec2::new(0.0, -0.5),
-                Vec2::new(0.5, 0.5),
-                Vec2::new(-0.5, 0.8),
-            ));
-            let size = path.vertex();
+            path.triangle(
+                Vec3::new(
+                    Vec4::new(0.0, -0.5, 0.0, 1.0),
+                    Vec4::new(0.5, 0.5, 0.0, 1.0),
+                    Vec4::new(-0.5, 0.5, 0.0, 1.0),
+                ),
+                Vec3::new(
+                    Vec4::new(1.0, 0.0, 0.0, 1.0),
+                    Vec4::new(0.0, 1.0, 0.0, 1.0),
+                    Vec4::new(0.0, 0.0, 1.0, 1.0),
+                ),
+            );
+            let size = path.size();
             let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
             self.logical_device.inner.cmd_bind_vertex_buffers(

@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::{ffi::CString, mem::offset_of};
 
 use ash::vk::{
     AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
@@ -13,7 +13,7 @@ use ash::vk::{
     VertexInputRate,
 };
 
-use crate::{Image, LogicalDevice, Pipeline, Shader, Vec2};
+use crate::{geometry::VertexData, Image, LogicalDevice, Pipeline, Shader, Vec2};
 
 pub struct SubPass(SubpassDescription);
 
@@ -79,15 +79,23 @@ impl RenderPass {
 
         let vertex_binding_description = vec![VertexInputBindingDescription::builder()
             .binding(0)
-            .stride(std::mem::size_of::<Vec2<f32>>() as u32)
+            .stride(std::mem::size_of::<VertexData>() as u32)
             .input_rate(VertexInputRate::VERTEX)
             .build()];
-        let vertex_input_description = vec![VertexInputAttributeDescription::builder()
-            .binding(0)
-            .location(0)
-            .format(Format::R32G32B32_SFLOAT)
-            .offset(0)
-            .build()];
+        let vertex_input_description = vec![
+            VertexInputAttributeDescription::builder()
+                .binding(0)
+                .location(0)
+                .format(Format::R32G32_SFLOAT)
+                .offset(offset_of!(VertexData, pos) as u32)
+                .build(),
+            VertexInputAttributeDescription::builder()
+                .binding(0)
+                .location(1)
+                .format(Format::R32G32B32A32_SFLOAT)
+                .offset(offset_of!(VertexData, color) as u32)
+                .build(),
+        ];
 
         let mut shader_stages = vec![];
         let entry = CString::new("main").unwrap();
