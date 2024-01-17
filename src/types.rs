@@ -89,7 +89,7 @@ where
 
 /// Vector type with fixed number of elements at 3
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec3<T>(pub(crate) T,pub(crate) T,pub(crate) T)
+pub struct Vec3<T>(pub(crate) T, pub(crate) T, pub(crate) T)
 where
     T: Clone + Copy;
 
@@ -171,7 +171,7 @@ where
 
 /// Vector type with fixed number of elements at 4
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Vec4<T>(pub(crate) T,pub(crate) T,pub(crate) T,pub(crate) T)
+pub struct Vec4<T>(pub(crate) T, pub(crate) T, pub(crate) T, pub(crate) T)
 where
     T: Clone + Copy;
 

@@ -1,0 +1,93 @@
+Launching Vulkan Application:
+- Layers overridden by "Validation" configuration.
+- Application: window.exe
+- Executable: C:\Vulx\target\debug\examples\window.exe
+- Working Directory: C:\Vulx
+- Log file: C:\Vulx\window.txt
+UNASSIGNED-CreateInstance-status-message(INFO / SPEC): msgNum: -2016116905 - Validation Information: [ UNASSIGNED-CreateInstance-status-message ] Object 0: handle = 0x237c640c090, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x87d47f57 | vkCreateInstance():  Khronos Validation Layer Active:
+    Settings File: Found at C:\Users\LatteSyobon\AppData\Local\LunarG\vkconfig\override\vk_layer_settings.txt specified by VkConfig application override.
+    Current Enables: None.
+    Current Disables: None.
+
+    Objects: 1
+        [0] 0x237c640c090, type: 1, name: NULL
+---- Queue 1 ----
+Graphic support: true
+Compute support: true
+Transfer support: true
+UNASSIGNED-cache-file-error(INFO / SPEC): msgNum: -256165483 - Validation Information: [ UNASSIGNED-cache-file-error ] | MessageID = 0xf0bb3995 | vkCreateDevice():  Cannot open shader validation cache at C:\Users\LATTES~1\AppData\Local\Temp/shader_validation_cache.bin for reading (it may not exist yet)
+    Objects: 0
+VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter(ERROR / SPEC): msgNum: -1711417675 - Validation Error: [ VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter ] | MessageID = 0x99fdd6b5 | vkCreateSwapchainKHR(): pCreateInfo->compositeAlpha is zero. The Vulkan spec states: compositeAlpha must be a valid VkCompositeAlphaFlagBitsKHR value (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter)
+    Objects: 0
+VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280(ERROR / SPEC): msgNum: -1341842926 - Validation Error: [ VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280 ] | MessageID = 0xb0051a12 | vkCreateSwapchainKHR(): pCreateInfo->compositeAlpha is not supported, support values are:
+  VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR%s
+. The Vulkan spec states: compositeAlpha must be one of the bits present in the supportedCompositeAlpha member of the VkSurfaceCapabilitiesKHR structure returned by vkGetPhysicalDeviceSurfaceCapabilitiesKHR for the surface (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280)
+    Objects: 0
+VUID-VkFramebufferCreateInfo-pAttachments-00880(ERROR / SPEC): msgNum: 449121544 - Validation Error: [ VUID-VkFramebufferCreateInfo-pAttachments-00880 ] Object 0: handle = 0xead9370000000008, type = VK_OBJECT_TYPE_RENDER_PASS; | MessageID = 0x1ac50d08 | vkCreateFramebuffer(): pCreateInfo->pAttachments[0] has format of VK_FORMAT_B8G8R8A8_UNORM that does not match the format of VK_FORMAT_R8G8B8A8_UNORM used by the corresponding attachment for VkRenderPass 0xead9370000000008[]. The Vulkan spec states: If flags does not include VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT, each element of pAttachments must have been created with a VkFormat value that matches the VkFormat specified by the corresponding VkAttachmentDescription in renderPass (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkFramebufferCreateInfo-pAttachments-00880)
+    Objects: 1
+        [0] 0xead9370000000008, type: 18, name: NULL
+VUID-VkFramebufferCreateInfo-pAttachments-00880(ERROR / SPEC): msgNum: 449121544 - Validation Error: [ VUID-VkFramebufferCreateInfo-pAttachments-00880 ] Object 0: handle = 0xead9370000000008, type = VK_OBJECT_TYPE_RENDER_PASS; | MessageID = 0x1ac50d08 | vkCreateFramebuffer(): pCreateInfo->pAttachments[0] has format of VK_FORMAT_B8G8R8A8_UNORM that does not match the format of VK_FORMAT_R8G8B8A8_UNORM used by the corresponding attachment for VkRenderPass 0xead9370000000008[]. The Vulkan spec states: If flags does not include VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT, each element of pAttachments must have been created with a VkFormat value that matches the VkFormat specified by the corresponding VkAttachmentDescription in renderPass (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkFramebufferCreateInfo-pAttachments-00880)
+    Objects: 1
+        [0] 0xead9370000000008, type: 18, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+VUID-vkResetCommandBuffer-commandBuffer-00045(ERROR / SPEC): msgNum: 511214570 - Validation Error: [ VUID-vkResetCommandBuffer-commandBuffer-00045 ] Object 0: handle = 0x237c9ac0eb0, type = VK_OBJECT_TYPE_COMMAND_BUFFER; Object 1: handle = 0xfa21a40000000003, type = VK_OBJECT_TYPE_COMMAND_POOL; | MessageID = 0x1e7883ea | vkResetCommandBuffer():  (VkCommandBuffer 0x237c9ac0eb0[]) is in use. The Vulkan spec states: commandBuffer must not be in the pending state (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkResetCommandBuffer-commandBuffer-00045)
+    Objects: 2
+        [0] 0x237c9ac0eb0, type: 6, name: NULL
+        [1] 0xfa21a40000000003, type: 25, name: NULL
+Cleared frame buffers
+Cleared image view
+VUID-vkDestroyImage-image-04882(ERROR / SPEC): msgNum: -701044896 - Validation Error: [ VUID-vkDestroyImage-image-04882 ] Object 0: handle = 0xf443490000000006, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0xd636e760 | vkDestroyImage(): image VkImage 0xf443490000000006[] is a presentable image controlled by the implementation and must be destroyed with vkDestroySwapchainKHR. The Vulkan spec states: image must not have been acquired from vkGetSwapchainImagesKHR (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkDestroyImage-image-04882)
+    Objects: 1
+        [0] 0xf443490000000006, type: 10, name: NULL
+VUID-vkDestroyImage-image-04882(ERROR / SPEC): msgNum: -701044896 - Validation Error: [ VUID-vkDestroyImage-image-04882 ] Object 0: handle = 0xcb3ee80000000007, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0xd636e760 | vkDestroyImage(): image VkImage 0xcb3ee80000000007[] is a presentable image controlled by the implementation and must be destroyed with vkDestroySwapchainKHR. The Vulkan spec states: image must not have been acquired from vkGetSwapchainImagesKHR (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkDestroyImage-image-04882)
+    Objects: 1
+        [0] 0xcb3ee80000000007, type: 10, name: NULL
+Cleared images
+VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter(ERROR / SPEC): msgNum: -1711417675 - Validation Error: [ VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter ] | MessageID = 0x99fdd6b5 | vkCreateSwapchainKHR(): pCreateInfo->compositeAlpha is zero. The Vulkan spec states: compositeAlpha must be a valid VkCompositeAlphaFlagBitsKHR value (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkSwapchainCreateInfoKHR-compositeAlpha-parameter)
+    Objects: 0
+VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280(ERROR / SPEC): msgNum: -1341842926 - Validation Error: [ VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280 ] | MessageID = 0xb0051a12 | vkCreateSwapchainKHR(): pCreateInfo->compositeAlpha is not supported, support values are:
+  VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR%s
+. The Vulkan spec states: compositeAlpha must be one of the bits present in the supportedCompositeAlpha member of the VkSurfaceCapabilitiesKHR structure returned by vkGetPhysicalDeviceSurfaceCapabilitiesKHR for the surface (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkSwapchainCreateInfoKHR-compositeAlpha-01280)
+    Objects: 0
+UNASSIGNED-Threading-Info(ERROR / SPEC): msgNum: 1567320034 - Validation Error: [ UNASSIGNED-Threading-Info ] Object 0: handle = 0xf443490000000006, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0x5d6b67e2 | Couldn't find VkImage Object 0xf443490000000006. This should not happen and may indicate a bug in the application.
+    Objects: 1
+        [0] 0xf443490000000006, type: 10, name: NULL
+UNASSIGNED-Threading-Info(ERROR / SPEC): msgNum: 1567320034 - Validation Error: [ UNASSIGNED-Threading-Info ] Object 0: handle = 0xcb3ee80000000007, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0x5d6b67e2 | Couldn't find VkImage Object 0xcb3ee80000000007. This should not happen and may indicate a bug in the application.
+    Objects: 1
+        [0] 0xcb3ee80000000007, type: 10, name: NULL
+Process terminated

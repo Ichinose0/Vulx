@@ -5,7 +5,10 @@ mod png;
 pub(crate) mod surface;
 #[cfg(feature = "window")]
 pub(crate) mod swapchain;
-use ash::vk::{CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, SubmitInfo};
+use ash::vk::{
+    CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, PipelineStageFlags, Semaphore,
+    SubmitInfo,
+};
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
 pub use hwnd::*;
@@ -80,7 +83,7 @@ impl RenderTargetBuilder {
     #[cfg(target_os = "windows")]
     #[cfg(feature = "window")]
     pub fn build_hwnd(self, hwnd: isize, hinstance: isize) -> Result<HwndRenderTarget, ()> {
-        use ash::vk::FenceCreateInfo;
+        use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
         use libc::c_void;
 
         use crate::{ShaderKind, Spirv, SubPass};
@@ -110,7 +113,6 @@ impl RenderTargetBuilder {
             hwnd as *const c_void,
             hinstance as *const c_void,
         );
-        println!("Create surface");
         let swapchain = device
             .create_swapchain(&instance, physical_device, &surface)
             .unwrap();
@@ -118,13 +120,23 @@ impl RenderTargetBuilder {
 
         let render_pass = RenderPass::new(&device, &subpasses);
 
-        let mut frame_buffers = vec![];
-        let image_view = swapchain.get_image(&device).unwrap();
+        let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
+            Ok(i) => i,
+            Err(_) => panic!("Err"),
+        };
 
-        for i in image_view {
+        let mut frame_buffers = vec![];
+        let image_view = swapchain.get_image(&device, &images).unwrap();
+
+        for i in &image_view {
             frame_buffers.push(
-                i.create_frame_buffer(&device, &render_pass, &self.image.unwrap())
-                    .unwrap(),
+                i.create_frame_buffer(
+                    &device,
+                    &render_pass,
+                    self.image.as_ref().unwrap().viewport.width as u32,
+                    self.image.as_ref().unwrap().viewport.height as u32,
+                )
+                .unwrap(),
             );
         }
 
@@ -143,13 +155,22 @@ impl RenderTargetBuilder {
 
         let pipeline = render_pass
             .create_pipeline(
-                &self.image.unwrap(),
+                &self.image.unwrap().inner,
                 &device,
                 &[fragment_shader, vertex_shader],
+                800,
+                600,
             )
             .unwrap();
-        let create_info = FenceCreateInfo::builder().build();
+        let create_info = FenceCreateInfo::builder()
+            .flags(FenceCreateFlags::SIGNALED)
+            .build();
         let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
+        let create_info = SemaphoreCreateInfo::builder().build();
+        let swapchain_semaphore =
+            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
+        let rendered_semaphore =
+            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
         Ok(HwndRenderTarget {
             instance,
             buffer,
@@ -157,8 +178,10 @@ impl RenderTargetBuilder {
             physical_device,
             queue,
             frame_buffers,
+            image_view,
+            images,
             render_pass,
-            pipeline: pipeline[0],
+            pipeline,
             image: self.image,
             surface,
             swapchain,
@@ -167,6 +190,14 @@ impl RenderTargetBuilder {
             vertex: 0,
             buffers: vec![],
             offsets: vec![],
+            swapchain_semaphore,
+            rendered_semaphore,
+
+            width: 800,
+            height: 600,
+
+            fragment_shader,
+            vertex_shader
         })
     }
 
@@ -268,17 +299,24 @@ impl CommandBuffer {
         }
     }
 
-    pub(crate) fn submit(&self, device: &LogicalDevice, queue: Queue) {
+    pub(crate) fn submit(
+        &self,
+        device: &LogicalDevice,
+        queue: Queue,
+        fence: Fence,
+        semaphores: &[Semaphore],
+        signal_semaphores: &[Semaphore],
+        wait_dst_stage_mask: &[PipelineStageFlags],
+    ) {
         let submit_cmd_buf = vec![self.cmd_buffers[0]];
         let info = vec![SubmitInfo::builder()
             .command_buffers(&submit_cmd_buf)
+            .wait_semaphores(semaphores)
+            .signal_semaphores(&signal_semaphores)
+            .wait_dst_stage_mask(wait_dst_stage_mask)
             .build()];
         unsafe {
-            device
-                .inner
-                .queue_submit(queue.0, &info, Fence::null())
-                .unwrap();
-            device.inner.queue_wait_idle(queue.0).unwrap();
+            device.inner.queue_submit(queue.0, &info, fence).unwrap();
         }
     }
 }

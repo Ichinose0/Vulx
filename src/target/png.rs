@@ -1,7 +1,7 @@
 use std::{fs::File, io::BufWriter};
 
 use ash::vk::{
-    ClearValue, Extent2D, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, Offset2D,
+    ClearValue, Extent2D, Fence, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, Offset2D,
     PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
 };
 
@@ -112,7 +112,14 @@ impl RenderTarget for PngRenderTarget {
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
         }
         self.buffer.end(&self.logical_device);
-        self.buffer.submit(&self.logical_device, self.queue);
+        self.buffer.submit(
+            &self.logical_device,
+            self.queue,
+            Fence::null(),
+            &[],
+            &[],
+            &[],
+        );
         let file = File::create(&self.path).unwrap();
         let w = &mut BufWriter::new(file);
 

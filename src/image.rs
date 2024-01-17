@@ -196,11 +196,12 @@ impl ImageView {
         &self,
         device: &LogicalDevice,
         render_pass: &RenderPass,
-        image: &Image,
+        width: u32,
+        height: u32,
     ) -> Result<FrameBuffer, ()> {
         let create_info = FramebufferCreateInfo::builder()
-            .width(image.viewport.width as u32)
-            .height(image.viewport.height as u32)
+            .width(width)
+            .height(height)
             .layers(1)
             .render_pass(render_pass.inner)
             .attachments(&[self.inner])

@@ -8,7 +8,7 @@ use crate::Vec2;
 /// # Value Meaning
 /// * `Vertex` - Vertex shader.
 /// * `Fragment` - Fragment shader.
-#[derive(Debug)]
+#[derive(Clone,Copy,Debug)]
 pub enum ShaderKind {
     Vertex,
     Fragment,
@@ -50,7 +50,7 @@ impl Spirv {
 /// Represents a shader
 ///
 /// It can be created with create_shader_module from Device
-#[derive(Debug)]
+#[derive(Clone,Copy,Debug)]
 pub struct Shader {
     pub(crate) inner: ShaderModule,
     pub(crate) kind: ShaderKind,

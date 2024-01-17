@@ -78,18 +78,20 @@ fn main() {
     //     ),
     // );
 
-    triangle.rectangle(Vec4::new(
-        Vec4::new(-0.5, -0.5, 0.0, 1.0),
-        Vec4::new(0.5, -0.5, 0.0, 1.0),
-        Vec4::new(0.5, 0.5, 0.0, 1.0),
-        Vec4::new(-0.5,0.5,0.0,1.0)
-    ),
-    Vec4::new(
-        Vec4::new(1.0, 0.0, 0.0, 1.0),
-        Vec4::new(0.0, 1.0, 0.0, 1.0),
-        Vec4::new(0.0, 0.0, 1.0, 1.0),
-        Vec4::new(1.0,1.0,0.0,1.0)
-    ));
+    triangle.rectangle(
+        Vec4::new(
+            Vec4::new(-0.5, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, 0.5, 0.0, 1.0),
+            Vec4::new(-0.5, 0.5, 0.0, 1.0),
+        ),
+        Vec4::new(
+            Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(0.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 1.0, 1.0),
+            Vec4::new(1.0, 1.0, 0.0, 1.0),
+        ),
+    );
 
     let window_handle = window.window_handle().unwrap();
 
@@ -125,7 +127,9 @@ fn main() {
                 _ => (),
             },
 
-            Event::AboutToWait => {}
+            Event::AboutToWait => {
+                window.request_redraw();
+            }
 
             _ => (),
         }

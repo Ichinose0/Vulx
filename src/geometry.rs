@@ -143,30 +143,30 @@ impl PathGeometry {
         }
     }
 
-    pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>,color: Vec4<Vec4<f32>>) {
+    pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>, color: Vec4<Vec4<f32>>) {
         self.vertices.push(VertexData {
             pos: vert[0],
-            color: color[0]
+            color: color[0],
         });
         self.vertices.push(VertexData {
             pos: vert[2],
-            color: color[2]
+            color: color[2],
         });
         self.vertices.push(VertexData {
             pos: vert[3],
-            color: color[3]
+            color: color[3],
         });
         self.vertices.push(VertexData {
             pos: vert[2],
-            color: color[2]
+            color: color[2],
         });
         self.vertices.push(VertexData {
             pos: vert[0],
-            color: color[0]
+            color: color[0],
         });
         self.vertices.push(VertexData {
             pos: vert[1],
-            color: color[1]
+            color: color[1],
         });
     }
 

@@ -10,7 +10,7 @@ use ash::vk::{
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
     PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
     SubpassDescription, VertexInputAttributeDescription, VertexInputBindingDescription,
-    VertexInputRate,
+    VertexInputRate, Viewport,
 };
 
 use crate::{geometry::VertexData, Image, LogicalDevice, Pipeline, Shader, Vec2};
@@ -69,9 +69,11 @@ impl RenderPass {
     }
     pub fn create_pipeline(
         &self,
-        image: &Image,
+        image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
+        width: u32,
+        height: u32,
     ) -> Result<Vec<Pipeline>, ()> {
         if shaders.is_empty() {
             return Err(());
@@ -113,16 +115,16 @@ impl RenderPass {
             );
         }
         let scissors = Rect2D::builder()
-            .extent(
-                Extent2D::builder()
-                    .width(image.viewport.width as u32)
-                    .height(image.viewport.height as u32)
-                    .build(),
-            )
+            .extent(Extent2D::builder().width(width).height(height).build())
             .offset(Offset2D::builder().x(0).y(0).build())
             .build();
         let viewport_state_info = PipelineViewportStateCreateInfo::builder()
-            .viewports(&[image.viewport])
+            .viewports(&[Viewport::builder()
+                .width(width as f32)
+                .height(height as f32)
+                .min_depth(0.0)
+                .max_depth(1.0)
+                .build()])
             .scissors(&[scissors])
             .build();
         let vertex_input_info = PipelineVertexInputStateCreateInfo::builder()

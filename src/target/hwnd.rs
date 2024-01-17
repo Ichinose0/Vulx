@@ -2,15 +2,16 @@ use std::{fs::File, io::BufWriter};
 
 use ash::vk::{
     ClearValue, CommandBufferResetFlags, Extent2D, Fence, FenceCreateInfo, MemoryAllocateInfo,
-    MemoryMapFlags, MemoryPropertyFlags, Offset2D, PipelineBindPoint, PresentInfoKHR, Rect2D,
-    RenderPassBeginInfo, Semaphore, SubpassContents,
+    MemoryMapFlags, MemoryPropertyFlags, Offset2D, PipelineBindPoint, PipelineStageFlags,
+    PresentInfoKHR, Rect2D, RenderPassBeginInfo, Semaphore, SubpassContents,
 };
 
-use super::CommandBuffer;
+use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
-    geometry::PathGeometry, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
-    Pipeline, Queue, RenderPass, RenderTarget, Vec2, Vec3,
+    geometry::PathGeometry, FrameBuffer, Image, ImageView, Instance, IntoPath, LogicalDevice,
+    PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, Vec2,
+    Vec3, Shader,
 };
 
 pub struct HwndRenderTarget {
@@ -21,8 +22,10 @@ pub struct HwndRenderTarget {
     pub(crate) queue: Queue,
 
     pub(crate) frame_buffers: Vec<FrameBuffer>,
+    pub(crate) image_view: Vec<ImageView>,
+    pub(crate) images: Vec<ash::vk::Image>,
     pub(crate) render_pass: RenderPass,
-    pub(crate) pipeline: Pipeline,
+    pub(crate) pipeline: Vec<Pipeline>,
 
     pub(crate) image: Option<Image>,
 
@@ -34,6 +37,15 @@ pub struct HwndRenderTarget {
     pub(crate) vertex: u32,
     pub(crate) buffers: Vec<ash::vk::Buffer>,
     pub(crate) offsets: Vec<u64>,
+
+    pub(crate) swapchain_semaphore: Semaphore,
+    pub(crate) rendered_semaphore: Semaphore,
+
+    pub(crate) fragment_shader: Shader,
+    pub(crate) vertex_shader: Shader,
+
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 impl HwndRenderTarget {}
@@ -45,32 +57,197 @@ impl RenderTarget for HwndRenderTarget {
                 .inner
                 .reset_command_buffer(self.buffer.cmd_buffers[0], CommandBufferResetFlags::empty())
                 .unwrap();
-            self.buffer.begin(&self.logical_device);
+
+            self.logical_device
+                .inner
+                .wait_for_fences(&[self.fence], true, u64::MAX)
+                .unwrap();
+
+            self.img_index = match unsafe {
+                self.swapchain.inner.acquire_next_image(
+                    self.swapchain.khr,
+                    1000000000,
+                    self.swapchain_semaphore,
+                    Fence::null(),
+                )
+            } {
+                Ok(i) => {
+                    if i.1 {
+                        for i in &self.frame_buffers {
+                            unsafe {
+                                self.logical_device.inner.destroy_framebuffer(i.inner, None);
+                            }
+                        }
+                        self.frame_buffers.clear();
+                        println!("Cleared frame buffers");
+                        for i in &self.image_view {
+                            unsafe {
+                                self.logical_device.inner.destroy_image_view(i.inner, None);
+                            }
+                        }
+                        self.image_view.clear();
+                        
+
+                        let (swapchain, capabilities) = recreate_swapchain(
+                            &self.instance,
+                            &self.logical_device,
+                            self.physical_device,
+                            &self.surface,
+                        );
+                        self.width = capabilities.current_extent.width;
+                        self.height = capabilities.current_extent.height;
+                        self.swapchain = swapchain;
+                        println!("Recreate swapchain");
+                        println!("Cleared image view");
+                        
+                        self.images = self
+                            .swapchain
+                            .inner
+                            .get_swapchain_images(self.swapchain.khr)
+                            .unwrap();
+                        let image_view = self
+                            .swapchain
+                            .get_image(&self.logical_device, &self.images)
+                            .unwrap();
+                        let subpasses = vec![SubPass::new()];
+
+                        
+                        self.logical_device.destroy_render_pass(&self.render_pass);
+                        for i in &self.pipeline {
+                            self.logical_device.destroy_pipeline(i);
+                        }
+                        self.render_pass = RenderPass::new(&self.logical_device, &subpasses);
+
+
+                        self.pipeline = self
+                            .render_pass
+                            .create_pipeline(
+                                &self.images[0],
+                                &self.logical_device,
+                                &[self.fragment_shader, self.vertex_shader],
+                                capabilities.current_extent.width,
+                                capabilities.current_extent.height,
+                            )
+                            .unwrap();
+
+                        for i in image_view {
+                            self.frame_buffers.push(
+                                i.create_frame_buffer(
+                                    &self.logical_device,
+                                    &self.render_pass,
+                                    capabilities.current_extent.width,
+                                    capabilities.current_extent.height,
+                                )
+                                .unwrap(),
+                            );
+                        }
+
+                        let result = self
+                            .swapchain
+                            .inner
+                            .acquire_next_image(
+                                self.swapchain.khr,
+                                1000000000,
+                                self.swapchain_semaphore,
+                                Fence::null(),
+                            )
+                            .unwrap();
+
+                        result.0
+                    } else {
+                        i.0
+                    }
+                }
+                Err(result) => {
+                    if result != ash::vk::Result::SUCCESS {
+                        panic!("Can't get next frame.");
+                    } else if result == ash::vk::Result::SUBOPTIMAL_KHR
+                        || result == ash::vk::Result::ERROR_OUT_OF_DATE_KHR
+                    {
+                        for i in &self.frame_buffers {
+                            unsafe {
+                                self.logical_device.inner.destroy_framebuffer(i.inner, None);
+                            }
+                        }
+                        self.frame_buffers.clear();
+                        println!("Cleared frame buffers");
+                        for i in &self.image_view {
+                            unsafe {
+                                self.logical_device.inner.destroy_image_view(i.inner, None);
+                            }
+                        }
+                        self.image_view.clear();
+                        println!("Cleared image view");
+                        for i in &self.images {
+                            unsafe {
+                                self.logical_device.inner.destroy_image(*i, None);
+                            }
+                        }
+                        self.images.clear();
+                        for i in &self.pipeline {
+                            unsafe {
+                                self.logical_device.destroy_pipeline(i);
+                            }
+                        }
+                        self.logical_device.destroy_render_pass(&self.render_pass);
+                        println!("Cleared images");
+                        self.swapchain
+                            .inner
+                            .destroy_swapchain(self.swapchain.khr, None);
+                        let (swapchain, capabilities) = recreate_swapchain(
+                            &self.instance,
+                            &self.logical_device,
+                            self.physical_device,
+                            &self.surface,
+                        );
+                        self.swapchain = swapchain;
+                        self.images = self
+                            .swapchain
+                            .inner
+                            .get_swapchain_images(self.swapchain.khr)
+                            .unwrap();
+                        let image_view = self
+                            .swapchain
+                            .get_image(&self.logical_device, &self.images)
+                            .unwrap();
+
+                        for i in image_view {
+                            self.frame_buffers.push(
+                                i.create_frame_buffer(
+                                    &self.logical_device,
+                                    &self.render_pass,
+                                    capabilities.current_extent.width,
+                                    capabilities.current_extent.height,
+                                )
+                                .unwrap(),
+                            );
+                        }
+
+                        let result = self
+                            .swapchain
+                            .inner
+                            .acquire_next_image(
+                                self.swapchain.khr,
+                                1000000000,
+                                self.swapchain_semaphore,
+                                Fence::null(),
+                            )
+                            .unwrap();
+
+                        result.0
+                    } else {
+                        panic!("Unknown error.");
+                    }
+                }
+            };
 
             self.logical_device
                 .inner
                 .reset_fences(&[self.fence])
                 .unwrap();
-            self.img_index = match unsafe {
-                self.swapchain.inner.acquire_next_image(
-                    self.swapchain.khr,
-                    1000000000,
-                    Semaphore::null(),
-                    self.fence,
-                )
-            } {
-                Ok(i) => {
-                    if i.1 {
-                        panic!("Err");
-                    }
-                    i.0
-                }
-                Err(_) => panic!("Err"),
-            };
-            self.logical_device
-                .inner
-                .wait_for_fences(&[self.fence], true, 1000000000)
-                .unwrap();
+
+            self.buffer.begin(&self.logical_device);
+
             let mut clear = ClearValue::default();
 
             clear.color.float32[0] = 1.0;
@@ -84,8 +261,8 @@ impl RenderTarget for HwndRenderTarget {
                     Rect2D::builder()
                         .extent(
                             Extent2D::builder()
-                                .width(self.image.as_ref().unwrap().viewport.width as u32)
-                                .height(self.image.as_ref().unwrap().viewport.height as u32)
+                                .width(self.width)
+                                .height(self.height)
                                 .build(),
                         )
                         .offset(Offset2D::builder().x(0).y(0).build())
@@ -128,7 +305,7 @@ impl RenderTarget for HwndRenderTarget {
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
-                self.pipeline.inner,
+                self.pipeline[0].inner,
             );
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
@@ -148,10 +325,20 @@ impl RenderTarget for HwndRenderTarget {
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
         }
         self.buffer.end(&self.logical_device);
-        self.buffer.submit(&self.logical_device, self.queue);
+        let render_wait_stages = vec![PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
+        self.buffer.submit(
+            &self.logical_device,
+            self.queue,
+            self.fence,
+            &[self.swapchain_semaphore],
+            &[self.rendered_semaphore],
+            &render_wait_stages,
+        );
+
         let present_info = PresentInfoKHR::builder()
             .swapchains(&[self.swapchain.khr])
             .image_indices(&[self.img_index])
+            .wait_semaphores(&[self.rendered_semaphore])
             .build();
         unsafe {
             self.swapchain
@@ -159,12 +346,6 @@ impl RenderTarget for HwndRenderTarget {
                 .queue_present(self.queue.0, &present_info)
                 .unwrap()
         };
-        // for i in &self.buffers {
-        //     unsafe { self.logical_device.inner.destroy_buffer(*i, None) };
-        // }
-        // self.buffers.clear();
-        //self.offsets.clear();
-        //self.vertex = 0;
     }
 
     fn set_image(&mut self, image: crate::Image) {
@@ -175,9 +356,16 @@ impl RenderTarget for HwndRenderTarget {
 impl Drop for HwndRenderTarget {
     fn drop(&mut self) {
         unsafe {
+            self.logical_device
+                .inner
+                .queue_wait_idle(self.queue.0)
+                .unwrap();
             self.logical_device.destroy_command_buffer(&self.buffer);
             self.logical_device.destroy_render_pass(&self.render_pass);
-            self.logical_device.destroy_pipeline(&self.pipeline);
+
+            for i in &self.pipeline {
+                self.logical_device.destroy_pipeline(i);
+            }
             self.surface
                 .surface
                 .destroy_surface(self.surface.surface_khr, None);
