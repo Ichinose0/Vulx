@@ -114,6 +114,22 @@ where
     }
 }
 
+impl<T> Index<usize> for Vec3<T>
+where
+    T: Clone + Copy,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.0,
+            1 => &self.1,
+            2 => &self.2,
+            _ => panic!("Out of range.")
+        }
+    }
+}
+
 impl<T> IntoIterator for Vec3<T>
 where
     T: Clone + Copy,
@@ -165,6 +181,23 @@ where
 {
     pub fn new(a: T, b: T, c: T, d: T) -> Self {
         Self(a, b, c, d, 0)
+    }
+}
+
+impl<T> Index<usize> for Vec4<T>
+where
+    T: Clone + Copy,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.0,
+            1 => &self.1,
+            2 => &self.2,
+            3 => &self.3
+            _ => panic!("Out of range.")
+        }
     }
 }
 
