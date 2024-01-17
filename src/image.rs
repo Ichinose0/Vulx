@@ -135,7 +135,7 @@ impl Default for ImageBuilder {
 
 #[derive(Clone, Copy)]
 pub struct Image {
-    pub(crate) inner: ash::vk::Image,
+    pub inner: ash::vk::Image,
     pub(crate) viewport: Viewport,
     pub(crate) memory: DeviceMemory,
     pub(crate) mem_size: u64,

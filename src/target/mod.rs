@@ -197,7 +197,7 @@ impl RenderTargetBuilder {
             height: 600,
 
             fragment_shader,
-            vertex_shader
+            vertex_shader,
         })
     }
 
@@ -245,6 +245,9 @@ impl RenderTargetBuilder {
             pipeline,
             image: self.image,
             path: file_path.to_owned(),
+            vertex: 0,
+            buffers: vec![],
+            offsets: vec![],
         })
     }
 }

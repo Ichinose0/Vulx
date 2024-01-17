@@ -1,8 +1,8 @@
 use Vulx::{
     geometry::PathGeometry,
     target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
-    ImageBuilder, InstanceBuilder, IntoPath, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass,
-    Vec2, Vec3,
+    Color, ImageBuilder, InstanceBuilder, IntoPath, RenderPass, RenderTarget, ShaderKind, Spirv,
+    SubPass, Vec2, Vec3, Vec4,
 };
 
 fn main() {
@@ -49,7 +49,7 @@ fn main() {
     let render_pass = RenderPass::new(&device, &subpasses);
 
     let frame_buffer = image_view
-        .create_frame_buffer(&device, &render_pass, &image)
+        .create_frame_buffer(&device, &render_pass, 640, 480)
         .unwrap();
 
     let fragment_shader = device
@@ -66,12 +66,47 @@ fn main() {
         .unwrap();
 
     let pipeline = render_pass
-        .create_pipeline(&image, &device, &[fragment_shader, vertex_shader])
+        .create_pipeline(
+            &image.inner,
+            &device,
+            &[fragment_shader, vertex_shader],
+            640,
+            480,
+        )
         .unwrap();
 
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
 
-    let render_target = RenderTargetBuilder::new()
+    let mut triangle = PathGeometry::new();
+    // triangle.triangle(
+    //     Vec3::new(
+    //         Vec4::new(0.0, -0.5, 0.0, 1.0),
+    //         Vec4::new(0.5, 0.5, 0.0, 1.0),
+    //         Vec4::new(-0.5, 0.5, 0.0, 1.0),
+    //     ),
+    //     Vec3::new(
+    //         Vec4::new(1.0, 0.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 1.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 0.0, 1.0, 1.0),
+    //     ),
+    // );
+
+    triangle.rectangle(
+        Vec4::new(
+            Vec4::new(-0.5, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, 0.5, 0.0, 1.0),
+            Vec4::new(-0.5, 0.5, 0.0, 1.0),
+        ),
+        Vec4::new(
+            Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(0.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 1.0, 1.0),
+            Vec4::new(1.0, 1.0, 0.0, 1.0),
+        ),
+    );
+
+    let mut render_target = RenderTargetBuilder::new()
         .instance(instance)
         .command_buffer(command_buffer)
         .logical_device(device)
@@ -81,9 +116,10 @@ fn main() {
         .queue(queue)
         .renderpass(render_pass)
         .frame_buffer(frame_buffer)
-        .build_png("triangle.png")
+        .build_png("Example.png")
         .unwrap();
 
     render_target.begin();
+    render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
     render_target.end();
 }

@@ -10,8 +10,8 @@ use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
     geometry::PathGeometry, FrameBuffer, Image, ImageView, Instance, IntoPath, LogicalDevice,
-    PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, Vec2,
-    Vec3, Shader,
+    PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, ShaderKind, Spirv, SubPass,
+    Vec2, Vec3,
 };
 
 pub struct HwndRenderTarget {
@@ -86,7 +86,6 @@ impl RenderTarget for HwndRenderTarget {
                             }
                         }
                         self.image_view.clear();
-                        
 
                         let (swapchain, capabilities) = recreate_swapchain(
                             &self.instance,
@@ -99,7 +98,7 @@ impl RenderTarget for HwndRenderTarget {
                         self.swapchain = swapchain;
                         println!("Recreate swapchain");
                         println!("Cleared image view");
-                        
+
                         self.images = self
                             .swapchain
                             .inner
@@ -111,13 +110,11 @@ impl RenderTarget for HwndRenderTarget {
                             .unwrap();
                         let subpasses = vec![SubPass::new()];
 
-                        
                         self.logical_device.destroy_render_pass(&self.render_pass);
                         for i in &self.pipeline {
                             self.logical_device.destroy_pipeline(i);
                         }
                         self.render_pass = RenderPass::new(&self.logical_device, &subpasses);
-
 
                         self.pipeline = self
                             .render_pass

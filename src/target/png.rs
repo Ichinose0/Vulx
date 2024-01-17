@@ -23,6 +23,10 @@ pub struct PngRenderTarget {
     pub(crate) render_pass: RenderPass,
     pub(crate) pipeline: Pipeline,
 
+    pub(crate) vertex: u32,
+    pub(crate) buffers: Vec<ash::vk::Buffer>,
+    pub(crate) offsets: Vec<u64>,
+
     pub(crate) image: Option<Image>,
     pub(crate) path: String,
 }
@@ -66,6 +70,16 @@ impl RenderTarget for PngRenderTarget {
     where
         P: IntoPath,
     {
+        unsafe {
+            if self.buffers.is_empty() {
+                let path =
+                    path.into_path(&self.instance, self.physical_device, &self.logical_device);
+
+                self.vertex += path.size as u32;
+                self.buffers.push(path.buffer.buffer);
+                self.offsets.push(0);
+            }
+        }
     }
 
     fn stroke<P>(&mut self, path: P, color: crate::Color, thickness: f64)
@@ -76,37 +90,28 @@ impl RenderTarget for PngRenderTarget {
 
     fn end(&mut self) {
         unsafe {
+            println!("End");
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
-            let mut path = PathGeometry::new();
-            path.triangle(
-                Vec3::new(
-                    Vec4::new(0.0, -0.5, 0.0, 1.0),
-                    Vec4::new(0.5, 0.5, 0.0, 1.0),
-                    Vec4::new(-0.5, 0.5, 0.0, 1.0),
-                ),
-                Vec3::new(
-                    Vec4::new(1.0, 0.0, 0.0, 1.0),
-                    Vec4::new(0.0, 1.0, 0.0, 1.0),
-                    Vec4::new(0.0, 0.0, 1.0, 1.0),
-                ),
-            );
-            let size = path.size();
-            let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
-
+            println!("Bind");
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
                 0,
-                &[path.buffer.buffer],
-                &[0],
+                &self.buffers,
+                &self.offsets,
             );
-
-            self.logical_device
-                .inner
-                .cmd_draw(self.buffer.cmd_buffers[0], size as u32, 1, 0, 0);
+            println!("Vertex buffer");
+            self.logical_device.inner.cmd_draw(
+                self.buffer.cmd_buffers[0],
+                self.vertex,
+                self.buffers.len() as u32,
+                0,
+                0,
+            );
+            println!("Draw");
             self.logical_device
                 .inner
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
