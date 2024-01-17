@@ -65,18 +65,31 @@ fn main() {
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
 
     let mut triangle = PathGeometry::new();
-    triangle.triangle(
-        Vec3::new(
-            Vec4::new(0.0, -0.5, 0.0, 1.0),
-            Vec4::new(0.5, 0.5, 0.0, 1.0),
-            Vec4::new(-0.5, 0.5, 0.0, 1.0),
-        ),
-        Vec3::new(
-            Vec4::new(1.0, 0.0, 0.0, 1.0),
-            Vec4::new(0.0, 1.0, 0.0, 1.0),
-            Vec4::new(0.0, 0.0, 1.0, 1.0),
-        ),
-    );
+    // triangle.triangle(
+    //     Vec3::new(
+    //         Vec4::new(0.0, -0.5, 0.0, 1.0),
+    //         Vec4::new(0.5, 0.5, 0.0, 1.0),
+    //         Vec4::new(-0.5, 0.5, 0.0, 1.0),
+    //     ),
+    //     Vec3::new(
+    //         Vec4::new(1.0, 0.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 1.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 0.0, 1.0, 1.0),
+    //     ),
+    // );
+
+    triangle.rectangle(Vec4::new(
+        Vec4::new(-0.5, -0.5, 0.0, 1.0),
+        Vec4::new(0.5, -0.5, 0.0, 1.0),
+        Vec4::new(0.5, 0.5, 0.0, 1.0),
+        Vec4::new(-0.5,0.5,0.0,1.0)
+    ),
+    Vec4::new(
+        Vec4::new(1.0, 0.0, 0.0, 1.0),
+        Vec4::new(0.0, 1.0, 0.0, 1.0),
+        Vec4::new(0.0, 0.0, 1.0, 1.0),
+        Vec4::new(1.0,1.0,0.0,1.0)
+    ));
 
     let window_handle = window.window_handle().unwrap();
 

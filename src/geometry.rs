@@ -143,13 +143,31 @@ impl PathGeometry {
         }
     }
 
-    pub fn rectangle(&mut self, vert: Vec2<Vec4<f32>>) {
-        // self.vertices[0].push(vert[0]);
-        // self.vertices[0].push(vert[1]);
-        // self.vertices[0].push(Vec2::new(vert[0].0,vert[1].1));
-        // self.vertices[0].push(vert[1]);
-        // self.vertices[0].push(vert[0]);
-        // self.vertices[0].push(Vec2::new(vert[1].0,vert[0].1));
+    pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>,color: Vec4<Vec4<f32>>) {
+        self.vertices.push(VertexData {
+            pos: vert[0],
+            color: color[0]
+        });
+        self.vertices.push(VertexData {
+            pos: vert[2],
+            color: color[2]
+        });
+        self.vertices.push(VertexData {
+            pos: vert[3],
+            color: color[3]
+        });
+        self.vertices.push(VertexData {
+            pos: vert[2],
+            color: color[2]
+        });
+        self.vertices.push(VertexData {
+            pos: vert[0],
+            color: color[0]
+        });
+        self.vertices.push(VertexData {
+            pos: vert[1],
+            color: color[1]
+        });
     }
 
     pub fn geometries(&mut self, vertices: Vec<Vec4<f32>>, color: Vec<Vec4<f32>>) {
@@ -161,7 +179,7 @@ impl PathGeometry {
     }
 
     pub fn size(&self) -> usize {
-        3
+        self.vertices.len()
     }
 }
 
