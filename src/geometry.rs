@@ -145,7 +145,13 @@ impl PathGeometry {
         self.vertices[0].push(Vec2::new(vert[1].0,vert[0].1));
     }
 
-    pub fn vertex(&self) -> usize {
+    pub fn geometries(&mut self,vertices: Vec<Vec2<f32>>) {
+        for i in vertices {
+            self.vertices[0].push(i);
+        }
+    }
+
+    pub fn size(&self) -> usize {
         let mut size = 0;
         for v in &self.vertices {
             for _ in v {
