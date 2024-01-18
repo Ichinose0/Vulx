@@ -1,12 +1,12 @@
 use crate::{RenderPass,LogicalDevice,Shader,Image};
 
 pub enum VertexDataLayout {
-    Vertex2Color3
-    Vertex3Color3
+    Vertex2Color3,
+    Vertex3Color3,
     Vertex4Color3,
-    Vertex2Color4
-    Vertex3Color4
-    Vertex4Color4
+    Vertex2Color4,
+    Vertex3Color4,
+    Vertex4Color4,
 }
 
 pub struct PipelineBuilder<'a> {
@@ -47,17 +47,26 @@ impl<'a> PipelineBuilder<'a> {
         let renderpass = match self.renderpass {
             Some(x) => x,
             None => return Err(())
-        }
+        };
         let device = match self.device {
             Some(x) => x,
             None => return Err(())
-        }
+        };
         let image = match self.image {
             Some(x) => x,
             None => return Err(())
-        }
+        };
         if self.shaders.is_none() {
-            self.shaders = Some(&[Shader::vertex_default(),Shader::fragment_default()]);
+            
+            self.shaders = Some(&[device
+                .create_shader_module(
+                    Spirv::vertex_default(),
+                    ShaderKind::Vertex,
+                ),device
+                .create_shader_module(
+                    Spirv::fragment_default(),
+                    ShaderKind::Fragment,
+                )]);
         }
 
         renderpass.create_pipeline(image,device,&self.shaders.unwrap(),self.width,self.height)
