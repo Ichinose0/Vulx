@@ -11,6 +11,7 @@ use Vulx::{
     ShaderKind, Spirv, SubPass, Vec2, Vec3, Vec4,
 };
 
+#[cfg(target_os = "windows")]
 fn main() {
     let event_loop = EventLoop::new().unwrap();
 
@@ -134,4 +135,10 @@ fn main() {
             _ => (),
         }
     });
+}
+
+
+#[cfg(not(target_os = "windows"))]
+fn main() {
+    panic!("This example is supported only windows.")
 }
