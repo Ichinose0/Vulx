@@ -273,6 +273,8 @@ pub trait RenderTarget {
     fn end(&mut self);
 
     fn set_image(&mut self, image: Image);
+
+    fn logical_device(&self) -> &LogicalDevice;
 }
 
 pub trait IntoPath {

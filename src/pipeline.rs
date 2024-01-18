@@ -12,7 +12,7 @@ pub enum VertexDataLayout {
 pub struct PipelineBuilder<'a> {
     renderpass: Option<&'a RenderPass>,
     device: Option<&'a LogicalDevice>,
-    shaders: Option<&'a[Shader]>,
+    shaders: Vec<Shader>,
     image: Option<&'a Image>,
     width: u32,
     height: u32
@@ -28,7 +28,9 @@ impl<'a> PipelineBuilder<'a> {
         self
     }
     pub fn shaders(mut self,shaders: &'a [Shader]) -> Self {
-        self.shaders = Some(shaders);
+        for x in shaders {
+            self.shaders.push(*x);
+        }
         self
     }
     pub fn image(mut self,image: &'a Image) -> Self {
@@ -56,20 +58,22 @@ impl<'a> PipelineBuilder<'a> {
             Some(x) => x,
             None => return Err(())
         };
-        if self.shaders.is_none() {
-            
-            self.shaders = Some(&[device
-                .create_shader_module(
-                    Spirv::vertex_default(),
-                    ShaderKind::Vertex,
-                ),device
-                .create_shader_module(
-                    Spirv::fragment_default(),
-                    ShaderKind::Fragment,
-                )]);
+        if self.shaders.is_empty() {
+            let vertex = device
+            .create_shader_module(
+                Spirv::vertex_default(),
+                ShaderKind::Vertex,
+            ).unwrap();
+            let fragment = device
+            .create_shader_module(
+                Spirv::fragment_default(),
+                ShaderKind::Fragment,
+            ).unwrap();
+            self.shaders.push(vertex);
+            self.shaders.push(fragment);
         }
 
-        renderpass.create_pipeline(image,device,&self.shaders.unwrap(),self.width,self.height)
+        renderpass.create_pipeline(&image.inner,device,&self.shaders,self.width,self.height)
     }
 }
 
@@ -78,7 +82,7 @@ impl<'a> Default for PipelineBuilder<'a> {
         Self {
             renderpass: None,
             device: None,
-            shaders: None,
+            shaders: vec![],
             image: None,
             width: 100,
             height: 100

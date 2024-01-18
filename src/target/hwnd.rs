@@ -348,6 +348,10 @@ impl RenderTarget for HwndRenderTarget {
     fn set_image(&mut self, image: crate::Image) {
         self.image = Some(image);
     }
+
+    fn logical_device(&self) -> &LogicalDevice {
+        &self.logical_device
+    }
 }
 
 impl Drop for HwndRenderTarget {

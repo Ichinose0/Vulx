@@ -122,4 +122,9 @@ fn main() {
     render_target.begin();
     render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
     render_target.end();
+    let device = render_target.logical_device();    
+
+    for i in &pipeline {
+        device.destroy_pipeline(i);
+    }
 }

@@ -53,12 +53,12 @@ impl<'a> RenderPassBuilder<'a> {
         self
     }
 
-    pub fn build(self) -> RenderPass {
+    pub fn build(self) -> Result<RenderPass, ()> {
         let device = match self.device {
             Some(x) => x,
             None => return Err(())
         };
-        RenderPass::new(device,self.subpasses)
+        Ok(RenderPass::new(device,self.subpasses))
     }
 }
 

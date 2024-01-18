@@ -148,4 +148,22 @@ impl RenderTarget for PngRenderTarget {
     fn set_image(&mut self, image: crate::Image) {
         self.image = Some(image);
     }
+
+    fn logical_device(&self) -> &LogicalDevice {
+        &self.logical_device
+    }
+}
+
+impl Drop for PngRenderTarget {
+    fn drop(&mut self) {
+        self.logical_device.destroy_render_pass(&self.render_pass);
+        self.logical_device.destroy_command_buffer(&self.buffer);
+        unsafe {
+            self.logical_device.inner.destroy_image(self.image.unwrap().inner, None);
+            for i in &self.buffers {
+                self.logical_device.inner.destroy_buffer(*i, None);
+            }
+            self.logical_device.inner.destroy_framebuffer(self.frame_buffer.inner, None);
+        }
+    }
 }
