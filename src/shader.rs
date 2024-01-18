@@ -1,6 +1,9 @@
 use ash::{util::read_spv, vk::ShaderModule};
 use std::io::{Cursor, Read};
 
+const DEFAULT_VERTEX_SHADER : &'static str = include_str!("spv/shader.vert.spv");
+const DEFAULT_FRAGMENT_SHADER : &'static str = include_str!("spv/shader.frag.spv");
+
 use crate::Vec2;
 
 ///Indicates shader type
@@ -41,6 +44,20 @@ impl Spirv {
         let mut buf = Vec::new();
         file.read_to_end(&mut buf).expect("file read failed");
         let mut spirv_file = Cursor::new(&buf);
+        let spirv = read_spv(&mut spirv_file).unwrap();
+
+        Self { data: spirv }
+    }
+
+    pub fn fragment_default() -> Self {
+        let mut spirv_file = Cursor::new(&DEFAULT_FRAGMENT_SHADER);
+        let spirv = read_spv(&mut spirv_file).unwrap();
+
+        Self { data: spirv }
+    }
+
+    pub fn vertex_default() -> Self {
+        let mut spirv_file = Cursor::new(&DEFAULT_VERTEX_SHADER);
         let spirv = read_spv(&mut spirv_file).unwrap();
 
         Self { data: spirv }
