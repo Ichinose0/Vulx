@@ -1,4 +1,4 @@
-use crate::{RenderPass,LogicalDevice,Shader,Image};
+use crate::{RenderPass,LogicalDevice,Shader,Image,Spirv,ShaderKind};
 
 pub enum VertexDataLayout {
     Vertex2Color3,

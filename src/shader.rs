@@ -1,8 +1,8 @@
 use ash::{util::read_spv, vk::ShaderModule};
 use std::io::{Cursor, Read};
 
-const DEFAULT_VERTEX_SHADER : &'static str = include_str!("spv/shader.vert.spv");
-const DEFAULT_FRAGMENT_SHADER : &'static str = include_str!("spv/shader.frag.spv");
+const DEFAULT_VERTEX_SHADER : &'static [u8] = include_str!("spv/shader.vert.spv");
+const DEFAULT_FRAGMENT_SHADER : &'static [u8] = include_str!("spv/shader.frag.spv");
 
 use crate::Vec2;
 
