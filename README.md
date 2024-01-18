@@ -1,4 +1,5 @@
 # Vulx: Vulkan-based graphics library
+[![Rust](https://github.com/Ichinose0/Vulx/actions/workflows/rust.yml/badge.svg)](https://github.com/Ichinose0/Vulx/actions/workflows/rust.yml)  
 a Vulkan-based graphics library.  
 ## Example
 ### Rectangle
