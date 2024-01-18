@@ -13,7 +13,7 @@ pub struct PipelineBuilder<'a> {
     renderpass: Option<&'a RenderPass>,
     device: Option<&'a LogicalDevice>,
     shaders: Option<&'a[Shader]>,
-    image: Option<Image>,
+    image: Option<&'a Image>,
     width: u32,
     height: u32
 }
@@ -29,6 +29,10 @@ impl<'a> PipelineBuilder<'a> {
     }
     pub fn shaders(mut self,shaders: &'a [Shader]) -> Self {
         self.shaders = Some(shaders);
+        self
+    }
+    pub fn image(mut self,image: &'a Image) -> Self {
+        self.image = Some(image);
         self
     }
     pub fn width(mut self,width: u32) -> Self {
@@ -56,7 +60,7 @@ impl<'a> PipelineBuilder<'a> {
             self.shaders = Some(&[Shader::vertex_default(),Shader::fragment_default()]);
         }
 
-        renderpass.create_pipeline(&image,&device,&self.shaders.unwrap(),self.width,self.height)
+        renderpass.create_pipeline(image,device,&self.shaders.unwrap(),self.width,self.height)
     }
 }
 

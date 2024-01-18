@@ -37,6 +37,40 @@ impl Default for SubPass {
     }
 }
 
+pub struct RenderPassBuilder<'a> {
+    device: Option<&'a LogicalDevice>,
+    subpasses: &'a [SubPass]
+}
+
+impl<'a> RenderPassBuilder<'a> {
+    pub fn logical_device(mut self,device: &'a LogicalDevice) -> Self {
+        self.device = Some(device);
+        self
+    }
+
+    pub fn subpasses(mut self,subpasses: &'a [SubPass]) -> Self {
+        self.subpasses = subpasses;
+        self
+    }
+
+    pub fn build(self) -> RenderPass {
+        let device = match self.device {
+            Some(x) => x,
+            None => return Err(())
+        };
+        RenderPass::new(device,self.subpasses)
+    }
+}
+
+impl<'a> Default for RenderPassBuilder<'a> {
+    fn default() -> Self {
+        Self {
+            device: None,
+            subpasses: &[]
+        }
+    }
+}
+
 pub struct RenderPass {
     pub(crate) inner: ash::vk::RenderPass,
 }
