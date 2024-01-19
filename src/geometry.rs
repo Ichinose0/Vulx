@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3, Vec4};
+use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3, Vec4,Mat4};
 use ash::vk::{
     BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
 };
@@ -122,6 +122,22 @@ pub struct Path {
 pub(crate) struct VertexData {
     pub(crate) pos: Vec4<f32>,
     pub(crate) color: Vec4<f32>,
+}
+
+pub struct Ubo {
+    model: Mat4<f32>,
+    view: Mat4<f32>
+    projection: Mat4<f32>,
+}
+
+impl Ubo {
+    pub fn new(model: Mat4<f32>,view: Mat4<f32>,projection: Mat4<f32>) -> Self {
+        Self {
+            model,
+            view,
+            projection
+        }
+    }
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.

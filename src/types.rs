@@ -2,7 +2,7 @@
 
 use std::ops::Index;
 
-use nalgebra::{Vector2, Vector3, Vector4};
+use nalgebra::{Vector2, Vector3, Vector4,Matrix4};
 
 use crate::{
     geometry::{Line, Path, PathGeometry},
@@ -12,6 +12,8 @@ use crate::{
 pub type Vec2<T> = Vector2<T>;
 pub type Vec3<T> = Vector3<T>;
 pub type Vec4<T> = Vector4<T>;
+
+pub type Mat4<T> = Matrix4<T>;
 
 /// Represents a color
 ///
