@@ -67,22 +67,18 @@ impl<'a> PipelineBuilder<'a> {
             Some(x) => x,
             None => return Err(()),
         };
-        println!("Renderpass");
         let device = match self.device {
             Some(x) => x,
             None => return Err(()),
         };
-        println!("Device");
         let image = match self.image {
             Some(x) => x,
             None => return Err(()),
         };
-        println!("Image");
         let mvp = match self.mvp {
             Some(x) => x,
-            None => return Err(()),
+            None => Mvp::new(identity(1.0), identity(1.0), identity(1.0)),
         };
-        println!("Mvp");
         if self.shaders.is_empty() {
             let vertex = device
                 .create_shader_module(Spirv::vertex_default(), ShaderKind::Vertex)
