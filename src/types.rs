@@ -15,6 +15,29 @@ pub type Vec4<T> = Vector4<T>;
 
 pub type Mat4<T> = Matrix4<T>;
 
+pub fn identity(ident: f32) -> Mat4<f32> {
+    Mat4::new(
+        ident,0.0,0.0,0.0,
+        0.0,ident,0.0,0.0,
+        0.0,0.0,ident,0.0,
+        0.0,0.0,0.0,ident,
+    )
+}
+
+pub fn translate(x: f32,y: f32,z: f32) -> Mat4<f32> {
+    Mat4::new(
+        1.0,0.0,0.0,x,
+        0.0,1.0,0.0,y,
+        0.0,0.0,1.0,z,
+        0.0,0.0,0.0,1.0
+    )
+}
+
+pub fn radians(r: f32) -> f32 {
+    use std::f64::consts::PI;
+    r*(PI/180)
+}
+
 /// Represents a color
 ///
 /// Initialization with ARGB allows you to create your own colors
