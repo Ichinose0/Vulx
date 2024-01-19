@@ -11,17 +11,14 @@ fn main() {
     let mut queue_family_index = 0;
     let physical_device = instance.default_physical_device(&mut queue_family_index);
 
-    let device = instance.create_logical_device(
-        physical_device,
-        queue_family_index,
-    );
+    let device = instance.create_logical_device(physical_device, queue_family_index);
     let queue = device.get_queue(queue_family_index);
 
-    let image = ImageBuilder::new().width(640).height(480).build(
-        &instance,
-        physical_device,
-        &device,
-    );
+    let image =
+        ImageBuilder::new()
+            .width(640)
+            .height(480)
+            .build(&instance, physical_device, &device);
     let image_view = image.create_image_view(&device).unwrap();
 
     let subpasses = vec![SubPass::new()];
@@ -32,24 +29,41 @@ fn main() {
         .create_frame_buffer(&device, &render_pass, 640, 480)
         .unwrap();
 
-    let fragment_shader = device.create_shader_module(Spirv::new(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/shader/shader.frag.spv")), ShaderKind::Fragment).unwrap();
-    let vertex_shader = device.create_shader_module(Spirv::new(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/shader/shader.vert.spv")), ShaderKind::Vertex).unwrap();
+    let fragment_shader = device
+        .create_shader_module(
+            Spirv::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/examples/shader/shader.frag.spv"
+            )),
+            ShaderKind::Fragment,
+        )
+        .unwrap();
+    let vertex_shader = device
+        .create_shader_module(
+            Spirv::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/examples/shader/shader.vert.spv"
+            )),
+            ShaderKind::Vertex,
+        )
+        .unwrap();
 
-    let projection = nalgebra_glm::perspective(640.0/480.0, 45.0*(180.0/std::f32::consts::PI), 0.1, 100.0);
+    let projection = nalgebra_glm::perspective(
+        640.0 / 480.0,
+        45.0 * (180.0 / std::f32::consts::PI),
+        0.1,
+        100.0,
+    );
 
     let view = nalgebra_glm::look_at(
-        &Vec3::new(2.0,0.0,1.0),
-        &Vec3::new(0.0,0.0,0.0),
-        &Vec3::new(0.0,1.0,0.0)
+        &Vec3::new(2.0, 0.0, 1.0),
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
     );
-    
+
     let model = nalgebra_glm::identity();
 
-    let mvp = Mvp::new(
-        model,
-        view,
-        projection
-    );
+    let mvp = Mvp::new(model, view, projection);
 
     let (pipeline, descriptor) = Pipeline::builder()
         .image(&image)
@@ -65,18 +79,6 @@ fn main() {
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
 
     let mut triangle = PathGeometry::new();
-    // triangle.triangle(
-    //     Vec3::new(
-    //         Vec4::new(0.0, -0.5, 0.0, 1.0),
-    //         Vec4::new(0.5, 0.5, 0.0, 1.0),
-    //         Vec4::new(-0.5, 0.5, 0.0, 1.0),
-    //     ),
-    //     Vec3::new(
-    //         Vec4::new(1.0, 0.0, 0.0, 1.0),
-    //         Vec4::new(0.0, 1.0, 0.0, 1.0),
-    //         Vec4::new(0.0, 0.0, 1.0, 1.0),
-    //     ),
-    // );
 
     triangle.triangle(
         Vec3::new(

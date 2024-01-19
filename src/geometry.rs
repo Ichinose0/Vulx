@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use crate::{Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4};
+use crate::{identity, Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4};
 use ash::vk::{
     BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
     PhysicalDeviceMemoryProperties,
@@ -154,6 +154,12 @@ impl Mvp {
     }
 }
 
+impl Default for Mvp {
+    fn default() -> Self {
+        Self::new(identity(1.0), identity(1.0), identity(1.0))
+    }
+}
+
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 pub struct PathGeometry {
     vertices: Vec<VertexData>,
@@ -227,7 +233,6 @@ impl IntoPath for PathGeometry {
             (std::mem::size_of::<VertexData>() * self.vertices.len()),
             BufferUsage::Vertex,
         );
-        println!("Len: {}",self.vertices.len());
         buffer.allocate_data(self.vertices.as_ptr() as *const c_void, device);
         Path {
             buffer,

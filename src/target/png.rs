@@ -92,20 +92,17 @@ impl RenderTarget for PngRenderTarget {
 
     fn end(&mut self) {
         unsafe {
-            println!("End");
             self.logical_device.inner.cmd_bind_pipeline(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
-            println!("Bind");
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
                 0,
                 &self.buffers,
                 &self.offsets,
             );
-            println!("Vertex buffer");
             self.logical_device.inner.cmd_bind_descriptor_sets(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
@@ -121,7 +118,6 @@ impl RenderTarget for PngRenderTarget {
                 0,
                 0,
             );
-            println!("Draw");
             self.logical_device
                 .inner
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);

@@ -142,6 +142,4 @@
 //     panic!("This example is supported only windows.")
 // }
 
-fn main() {
-    
-}
+fn main() {}

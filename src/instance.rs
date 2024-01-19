@@ -84,7 +84,7 @@ impl Instance {
         devices
     }
 
-    pub fn default_physical_device(&self,queue_family_index: &mut usize) -> PhysicalDevice {
+    pub fn default_physical_device(&self, queue_family_index: &mut usize) -> PhysicalDevice {
         let devices = self.enumerate_physical_device();
         let mut index = 0;
         let mut found_suitable_device = false;
