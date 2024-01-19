@@ -21,7 +21,19 @@ pub use queue::*;
 pub use renderpass::*;
 pub use shader::*;
 pub use stage::*;
+use thiserror::Error;
 pub use types::*;
+
+pub type VlResult<'a,T> = std::result::Result<T, VlError<'a>>;
+
+
+#[derive(Debug, Error)]
+pub enum VlError<'a> {
+    #[error("Parameter: `{0}` not found.")]
+    MissingParameter(&'a str),
+    #[error("`{0}`")]
+    VkException(#[from] ash::vk::Result),
+}
 
 #[cfg(test)]
 mod tests {
