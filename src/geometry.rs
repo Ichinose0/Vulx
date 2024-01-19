@@ -33,30 +33,39 @@ impl Line {
     }
 }
 
+pub enum BufferUsage {
+    Vertex,
+    Uniform
+}
+
 pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
+    pub(crate) size: usize
 }
 
 impl Buffer {
-    pub fn new(
-        vertices: &mut [VertexData],
-        instance: &Instance,
+    pub fn new(instance: &Instance,
         physical_device: PhysicalDevice,
-        device: &LogicalDevice,
-    ) -> Self {
-        let create_info = BufferCreateInfo::builder()
-            .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
-            .usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER)
+        device: &LogicalDevice,size: usize,usage: BufferUsage) -> Self {
+        let usage = match usage {
+            BufferUsage::Vertex => ash::vk::BufferUsageFlags::VERTEX_BUFFER,
+            BufferUsage::Uniform => ash::vk::BufferUsageFlags::UNIFORM_BUFFER,
+        };
+            let create_info = BufferCreateInfo::builder()
+            .size(size as u64)
+            .usage(usage)
             .sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
             .build();
         let buffer = unsafe { device.inner.create_buffer(&create_info, None) }.unwrap();
-        let mem_prop = unsafe {
-            instance
-                .inner
-                .get_physical_device_memory_properties(physical_device.0)
-        };
 
-        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(buffer) };
+        Self {
+            inner: buffer,
+            size
+        }
+    }
+
+    pub fn allocate_data(&self,data: *const c_void) {
+        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(buffer.buffer) };
         let mut create_info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
 
         let mut suitable_memory_found = false;
@@ -81,26 +90,26 @@ impl Buffer {
         let memory;
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
-            device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
+            device.inner.bind_buffer_memory(buffer.buffer, memory, 0).unwrap();
             let write_mem = device
                 .inner
                 .map_memory(
                     memory,
                     0,
-                    (std::mem::size_of::<VertexData>() * vertices.len()) as u64,
+                    self.size as u64,
                     MemoryMapFlags::empty(),
                 )
                 .unwrap();
             libc::memcpy(
                 write_mem,
-                vertices.as_ptr() as *const c_void,
-                std::mem::size_of::<VertexData>() * vertices.len(),
+                data,
+                self.size,
             );
 
             let mapped_memory_range = MappedMemoryRange::builder()
                 .memory(memory)
                 .offset(0)
-                .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
+                .size(self.size as u64)
                 .build();
 
             device
@@ -109,10 +118,8 @@ impl Buffer {
                 .unwrap();
             device.inner.unmap_memory(memory);
         }
-        Self { buffer }
     }
 }
-
 pub struct Path {
     pub(crate) buffer: Buffer,
     pub(crate) size: usize,
@@ -124,13 +131,13 @@ pub(crate) struct VertexData {
     pub(crate) color: Vec4<f32>,
 }
 
-pub struct Ubo {
-    model: Mat4<f32>,
-    view: Mat4<f32>
-    projection: Mat4<f32>,
+pub struct Mvp {
+    pub(crate) model: Mat4<f32>,
+    pub(crate) view: Mat4<f32>
+    pub(crate) projection: Mat4<f32>,
 }
 
-impl Ubo {
+impl Mvp {
     pub fn new(model: Mat4<f32>,view: Mat4<f32>,projection: Mat4<f32>) -> Self {
         Self {
             model,
@@ -206,7 +213,8 @@ impl IntoPath for PathGeometry {
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
-        let buffer = Buffer::new(&mut self.vertices, instance, physical_device, device);
+        let buffer = Buffer::new(instance, physical_device, device,std::mem::size_of<VertexData>() * self.vertices.len(),BufferUsage::Vertex);
+        buffer.allocate_data(self.vertices.as_ptr() as *const c_void);
         Path {
             buffer,
             size: self.size(),

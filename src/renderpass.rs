@@ -10,7 +10,8 @@ use ash::vk::{
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
     PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
     SubpassDescription, VertexInputAttributeDescription, VertexInputBindingDescription,
-    VertexInputRate, Viewport,
+    VertexInputRate, Viewport,DescriptorSetLayoutBinding,DescriptorType,DescriptorSetLayoutCreateInfo,
+
 };
 
 use crate::{geometry::VertexData, Image, LogicalDevice, Pipeline, Shader, Vec2};
@@ -106,12 +107,20 @@ impl RenderPass {
         image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
+        mvp: buffer,
         width: u32,
         height: u32,
     ) -> Result<Vec<Pipeline>, ()> {
         if shaders.is_empty() {
             return Err(());
         }
+
+        let desc_set_layout_bindings = vec![DescriptorSetLayoutBinding::builder().binding(0).descriptor_type(DescriptorType::UNIFORM_BUFFER).descriptor_count(1).stage_flags(ShaderStageFlags::VERTEX).build()];
+        let create_info = DescriptorSetLayoutCreateInfo::builder().bindings(&desc_set_layout_bindings).build();
+        let desc_set_layout = unsafe {
+            device.inner.create_descriptor_set_layout(&create_info,None).unwrap()
+        };
+
 
         let vertex_binding_description = vec![VertexInputBindingDescription::builder()
             .binding(0)
@@ -195,7 +204,7 @@ impl RenderPass {
             .logic_op_enable(false)
             .attachments(&blend_attachment)
             .build();
-        let layout_create_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
+        let layout_create_info = PipelineLayoutCreateInfo::builder().set_layouts(&[desc_set_layout]).build();
 
         let pipeline_layout = match unsafe {
             device

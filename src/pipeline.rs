@@ -1,4 +1,4 @@
-use crate::{RenderPass,LogicalDevice,Shader,Image,Spirv,ShaderKind};
+use crate::{RenderPass,LogicalDevice,Shader,Image,Spirv,ShaderKind,Mvp,Buffer,BufferUsage};
 
 pub enum VertexDataLayout {
     Vertex2Color3,
@@ -14,6 +14,7 @@ pub struct PipelineBuilder<'a> {
     device: Option<&'a LogicalDevice>,
     shaders: Vec<Shader>,
     image: Option<&'a Image>,
+    mvp: Option<Mvp>,
     width: u32,
     height: u32
 }
@@ -45,6 +46,12 @@ impl<'a> PipelineBuilder<'a> {
         self.height = height;
         self
     }
+
+    pub fn mvp(mut self,mvp: Mvp) -> Self {
+        self.mvp = Some(mvp);
+        self
+    }
+
     pub fn build(mut self) -> Result<Vec<Pipeline>, ()> {
         let renderpass = match self.renderpass {
             Some(x) => x,
@@ -55,6 +62,10 @@ impl<'a> PipelineBuilder<'a> {
             None => return Err(())
         };
         let image = match self.image {
+            Some(x) => x,
+            None => return Err(())
+        };
+        let mvp = match self.mvp {
             Some(x) => x,
             None => return Err(())
         };
@@ -73,7 +84,11 @@ impl<'a> PipelineBuilder<'a> {
             self.shaders.push(fragment);
         }
 
-        renderpass.create_pipeline(&image.inner,device,&self.shaders,self.width,self.height)
+        let buffer = Buffer::new(instance,physical_device,&device,std::mem::size_of<Mvp>(),BufferUsage::Uniform);
+        buffer.allocate_data(vec![mvp.model,mvp.view,mvp.projection].as_ptr() as *const c_void);
+
+
+        renderpass.create_pipeline(&image.inner,device,&self.shaders,buffer,self.width,self.height)
     }
 }
 
