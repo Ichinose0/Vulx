@@ -1,8 +1,9 @@
 use std::ffi::c_void;
 
-use crate::{Instance, IntoPath, LogicalDevice, PhysicalDevice, Vec2, Vec3, Vec4};
+use crate::{Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4};
 use ash::vk::{
     BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
+    PhysicalDeviceMemoryProperties,
 };
 
 /// # Represents a line segment
@@ -33,37 +34,58 @@ impl Line {
     }
 }
 
+pub enum BufferUsage {
+    Vertex,
+    Uniform,
+}
+
 pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
+    pub(crate) mem_prop: PhysicalDeviceMemoryProperties,
+    pub(crate) size: usize,
 }
 
 impl Buffer {
     pub fn new(
-        vertices: &mut [VertexData],
         instance: &Instance,
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
+        size: usize,
+        usage: BufferUsage,
     ) -> Self {
+        let usage = match usage {
+            BufferUsage::Vertex => ash::vk::BufferUsageFlags::VERTEX_BUFFER,
+            BufferUsage::Uniform => ash::vk::BufferUsageFlags::UNIFORM_BUFFER,
+        };
         let create_info = BufferCreateInfo::builder()
-            .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
-            .usage(ash::vk::BufferUsageFlags::VERTEX_BUFFER)
+            .size(size as u64)
+            .usage(usage)
             .sharing_mode(ash::vk::SharingMode::EXCLUSIVE)
             .build();
         let buffer = unsafe { device.inner.create_buffer(&create_info, None) }.unwrap();
+
         let mem_prop = unsafe {
             instance
                 .inner
                 .get_physical_device_memory_properties(physical_device.0)
         };
 
-        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(buffer) };
+        Self {
+            buffer,
+            mem_prop,
+            size,
+        }
+    }
+
+    pub fn allocate_data(&self, data: *const c_void, device: &LogicalDevice) {
+        let mem_req = unsafe { device.inner.get_buffer_memory_requirements(self.buffer) };
         let mut create_info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
 
         let mut suitable_memory_found = false;
 
-        for i in 0..mem_prop.memory_type_count {
+        for i in 0..self.mem_prop.memory_type_count {
             if ((mem_req.memory_type_bits & (1 << i)) != 0
-                && (mem_prop.memory_types[i as usize].property_flags
+                && (self.mem_prop.memory_types[i as usize].property_flags
                     & MemoryPropertyFlags::HOST_VISIBLE)
                     .as_raw()
                     != 0)
@@ -81,26 +103,20 @@ impl Buffer {
         let memory;
         unsafe {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
-            device.inner.bind_buffer_memory(buffer, memory, 0).unwrap();
+            device
+                .inner
+                .bind_buffer_memory(self.buffer, memory, 0)
+                .unwrap();
             let write_mem = device
                 .inner
-                .map_memory(
-                    memory,
-                    0,
-                    (std::mem::size_of::<VertexData>() * vertices.len()) as u64,
-                    MemoryMapFlags::empty(),
-                )
+                .map_memory(memory, 0, self.size as u64, MemoryMapFlags::empty())
                 .unwrap();
-            libc::memcpy(
-                write_mem,
-                vertices.as_ptr() as *const c_void,
-                std::mem::size_of::<VertexData>() * vertices.len(),
-            );
+            libc::memcpy(write_mem, data, self.size);
 
             let mapped_memory_range = MappedMemoryRange::builder()
                 .memory(memory)
                 .offset(0)
-                .size((std::mem::size_of::<VertexData>() * vertices.len()) as u64)
+                .size(self.size as u64)
                 .build();
 
             device
@@ -109,10 +125,8 @@ impl Buffer {
                 .unwrap();
             device.inner.unmap_memory(memory);
         }
-        Self { buffer }
     }
 }
-
 pub struct Path {
     pub(crate) buffer: Buffer,
     pub(crate) size: usize,
@@ -122,6 +136,22 @@ pub struct Path {
 pub(crate) struct VertexData {
     pub(crate) pos: Vec4<f32>,
     pub(crate) color: Vec4<f32>,
+}
+
+pub struct Mvp {
+    pub(crate) model: Mat4<f32>,
+    pub(crate) view: Mat4<f32>,
+    pub(crate) projection: Mat4<f32>,
+}
+
+impl Mvp {
+    pub fn new(model: Mat4<f32>, view: Mat4<f32>, projection: Mat4<f32>) -> Self {
+        Self {
+            model,
+            view,
+            projection,
+        }
+    }
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
@@ -190,7 +220,15 @@ impl IntoPath for PathGeometry {
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
-        let buffer = Buffer::new(&mut self.vertices, instance, physical_device, device);
+        let buffer = Buffer::new(
+            instance,
+            physical_device,
+            device,
+            (std::mem::size_of::<VertexData>() * self.vertices.len()),
+            BufferUsage::Vertex,
+        );
+        println!("Len: {}",self.vertices.len());
+        buffer.allocate_data(self.vertices.as_ptr() as *const c_void, device);
         Path {
             buffer,
             size: self.size(),

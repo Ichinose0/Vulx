@@ -1,6 +1,6 @@
-#[cfg(target_os = "windows")]
-#[cfg(feature = "window")]
-mod hwnd;
+// #[cfg(target_os = "windows")]
+// #[cfg(feature = "window")]
+// mod hwnd;
 mod png;
 pub(crate) mod surface;
 #[cfg(feature = "window")]
@@ -9,13 +9,14 @@ use ash::vk::{
     CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, PipelineStageFlags, Semaphore,
     SubmitInfo,
 };
-#[cfg(target_os = "windows")]
-#[cfg(feature = "window")]
-pub use hwnd::*;
+// #[cfg(target_os = "windows")]
+// #[cfg(feature = "window")]
+// pub use hwnd::*;
 pub use png::*;
 
 use crate::{
     FrameBuffer, Image, Instance, LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass,
+    StageDescriptor,
 };
 
 pub struct RenderTargetBuilder {
@@ -27,6 +28,7 @@ pub struct RenderTargetBuilder {
     frame_buffer: Option<FrameBuffer>,
     renderpass: Option<RenderPass>,
     pipeline: Option<Pipeline>,
+    descriptor: Option<StageDescriptor>,
     image: Option<Image>,
 }
 
@@ -80,126 +82,145 @@ impl RenderTargetBuilder {
         self
     }
 
-    #[cfg(target_os = "windows")]
-    #[cfg(feature = "window")]
-    pub fn build_hwnd(self, hwnd: isize, hinstance: isize) -> Result<HwndRenderTarget, ()> {
-        use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
-        use libc::c_void;
-
-        use crate::{ShaderKind, Spirv, SubPass};
-
-        let buffer = match self.buffer {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let physical_device = match self.physical_device {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let device = match self.device {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let instance = match self.instance {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let queue = match self.queue {
-            Some(b) => b,
-            None => return Err(()),
-        };
-        let surface = surface::Surface::create_for_win32(
-            &instance,
-            hwnd as *const c_void,
-            hinstance as *const c_void,
-        );
-        let swapchain = device
-            .create_swapchain(&instance, physical_device, &surface)
-            .unwrap();
-        let subpasses = vec![SubPass::new()];
-
-        let render_pass = RenderPass::new(&device, &subpasses);
-
-        let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
-            Ok(i) => i,
-            Err(_) => panic!("Err"),
-        };
-
-        let mut frame_buffers = vec![];
-        let image_view = swapchain.get_image(&device, &images).unwrap();
-
-        for i in &image_view {
-            frame_buffers.push(
-                i.create_frame_buffer(
-                    &device,
-                    &render_pass,
-                    self.image.as_ref().unwrap().viewport.width as u32,
-                    self.image.as_ref().unwrap().viewport.height as u32,
-                )
-                .unwrap(),
-            );
-        }
-
-        let fragment_shader = device
-            .create_shader_module(
-                Spirv::new("examples/shader/shader.frag.spv"),
-                ShaderKind::Fragment,
-            )
-            .unwrap();
-        let vertex_shader = device
-            .create_shader_module(
-                Spirv::new("examples/shader/shader.vert.spv"),
-                ShaderKind::Vertex,
-            )
-            .unwrap();
-
-        let pipeline = render_pass
-            .create_pipeline(
-                &self.image.unwrap().inner,
-                &device,
-                &[fragment_shader, vertex_shader],
-                800,
-                600,
-            )
-            .unwrap();
-        let create_info = FenceCreateInfo::builder()
-            .flags(FenceCreateFlags::SIGNALED)
-            .build();
-        let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
-        let create_info = SemaphoreCreateInfo::builder().build();
-        let swapchain_semaphore =
-            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
-        let rendered_semaphore =
-            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
-        Ok(HwndRenderTarget {
-            instance,
-            buffer,
-            logical_device: device,
-            physical_device,
-            queue,
-            frame_buffers,
-            image_view,
-            images,
-            render_pass,
-            pipeline,
-            image: self.image,
-            surface,
-            swapchain,
-            fence,
-            img_index: 0,
-            vertex: 0,
-            buffers: vec![],
-            offsets: vec![],
-            swapchain_semaphore,
-            rendered_semaphore,
-
-            width: 800,
-            height: 600,
-
-            fragment_shader,
-            vertex_shader,
-        })
+    pub fn descriptor(mut self, descriptor: StageDescriptor) -> Self {
+        self.descriptor = Some(descriptor);
+        self
     }
+
+    // #[cfg(target_os = "windows")]
+    // #[cfg(feature = "window")]
+    // pub fn build_hwnd(self, hwnd: isize, hinstance: isize) -> Result<HwndRenderTarget, ()> {
+    //     use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
+    //     use libc::c_void;
+
+    //     use crate::{
+    //         geometry::Mvp, identity, look_at, perspective, radians, ShaderKind, Spirv, SubPass,
+    //         Vec3,
+    //     };
+
+    //     let buffer = match self.buffer {
+    //         Some(b) => b,
+    //         None => return Err(()),
+    //     };
+    //     let physical_device = match self.physical_device {
+    //         Some(b) => b,
+    //         None => return Err(()),
+    //     };
+    //     let device = match self.device {
+    //         Some(b) => b,
+    //         None => return Err(()),
+    //     };
+    //     let instance = match self.instance {
+    //         Some(b) => b,
+    //         None => return Err(()),
+    //     };
+    //     let queue = match self.queue {
+    //         Some(b) => b,
+    //         None => return Err(()),
+    //     };
+    //     let surface = surface::Surface::create_for_win32(
+    //         &instance,
+    //         hwnd as *const c_void,
+    //         hinstance as *const c_void,
+    //     );
+    //     let swapchain = device
+    //         .create_swapchain(&instance, physical_device, &surface)
+    //         .unwrap();
+    //     let subpasses = vec![SubPass::new()];
+
+    //     let render_pass = RenderPass::new(&device, &subpasses);
+
+    //     let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
+    //         Ok(i) => i,
+    //         Err(_) => panic!("Err"),
+    //     };
+
+    //     let mut frame_buffers = vec![];
+    //     let image_view = swapchain.get_image(&device, &images).unwrap();
+
+    //     for i in &image_view {
+    //         frame_buffers.push(
+    //             i.create_frame_buffer(
+    //                 &device,
+    //                 &render_pass,
+    //                 self.image.as_ref().unwrap().viewport.width as u32,
+    //                 self.image.as_ref().unwrap().viewport.height as u32,
+    //             )
+    //             .unwrap(),
+    //         );
+    //     }
+
+    //     let fragment_shader = device
+    //         .create_shader_module(
+    //             Spirv::new("examples/shader/shader.frag.spv"),
+    //             ShaderKind::Fragment,
+    //         )
+    //         .unwrap();
+    //     let vertex_shader = device
+    //         .create_shader_module(
+    //             Spirv::new("examples/shader/shader.vert.spv"),
+    //             ShaderKind::Vertex,
+    //         )
+    //         .unwrap();
+
+    //     let projection = perspective(radians(45.0), 640.0 / 800.0, 0.1, 100.0);
+    //     let view = look_at(
+    //         Vec3::new(4.0, 3.0, 3.0),
+    //         Vec3::new(0.0, 0.0, 0.0),
+    //         Vec3::new(0.0, 1.0, 0.0),
+    //     );
+    //     let model = identity(1.0);
+
+    //     let mvp = Mvp::new(model, view, projection);
+
+    //     let (pipeline,descriptor) = Pipeline::builder()
+    //         .image(&self.image.unwrap())
+    //         .logical_device(&device)
+    //         .shaders(&[fragment_shader, vertex_shader])
+    //         .width(640)
+    //         .height(800)
+    //         .mvp(mvp)
+    //         .build(&instance, physical_device)
+    //         .unwrap();
+
+    //     let create_info = FenceCreateInfo::builder()
+    //         .flags(FenceCreateFlags::SIGNALED)
+    //         .build();
+    //     let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
+    //     let create_info = SemaphoreCreateInfo::builder().build();
+    //     let swapchain_semaphore =
+    //         unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
+    //     let rendered_semaphore =
+    //         unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
+    //     Ok(HwndRenderTarget {
+    //         instance,
+    //         buffer,
+    //         logical_device: device,
+    //         physical_device,
+    //         queue,
+    //         frame_buffers,
+    //         image_view,
+    //         images,
+    //         render_pass,
+    //         pipeline,
+    //         image: self.image,
+    //         surface,
+    //         swapchain,
+    //         fence,
+    //         img_index: 0,
+    //         vertex: 0,
+    //         buffers: vec![],
+    //         offsets: vec![],
+    //         swapchain_semaphore,
+    //         rendered_semaphore,
+
+    //         width: 800,
+    //         height: 600,
+
+    //         fragment_shader,
+    //         vertex_shader,
+    //     })
+    // }
 
     pub fn build_png(self, file_path: &str) -> Result<PngRenderTarget, ()> {
         let buffer = match self.buffer {
@@ -234,6 +255,10 @@ impl RenderTargetBuilder {
             Some(b) => b,
             None => return Err(()),
         };
+        let descriptor = match self.descriptor {
+            Some(b) => b,
+            None => return Err(()),
+        };
         Ok(PngRenderTarget {
             instance,
             buffer,
@@ -246,6 +271,7 @@ impl RenderTargetBuilder {
             image: self.image,
             path: file_path.to_owned(),
             vertex: 0,
+            descriptor,
             buffers: vec![],
             offsets: vec![],
         })
@@ -263,6 +289,7 @@ impl Default for RenderTargetBuilder {
             frame_buffer: None,
             renderpass: None,
             pipeline: None,
+            descriptor: None,
             image: None,
         }
     }

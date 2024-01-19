@@ -2,18 +2,23 @@ use std::{ffi::CString, mem::offset_of};
 
 use ash::vk::{
     AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
-    ColorComponentFlags, CullModeFlags, Extent2D, Format, FrontFace, GraphicsPipelineCreateInfo,
-    ImageLayout, Offset2D, PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
-    PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo,
-    PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
-    PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
-    PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
-    PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
-    SubpassDescription, VertexInputAttributeDescription, VertexInputBindingDescription,
-    VertexInputRate, Viewport,
+    ColorComponentFlags, CullModeFlags, DescriptorBufferInfo, DescriptorPoolCreateInfo,
+    DescriptorPoolSize, DescriptorSetAllocateInfo, DescriptorSetLayoutBinding,
+    DescriptorSetLayoutCreateInfo, DescriptorType, Extent2D, Format, FrontFace,
+    GraphicsPipelineCreateInfo, ImageLayout, Offset2D, PipelineBindPoint, PipelineCache,
+    PipelineColorBlendAttachmentState, PipelineColorBlendStateCreateInfo,
+    PipelineInputAssemblyStateCreateInfo, PipelineLayoutCreateInfo,
+    PipelineMultisampleStateCreateInfo, PipelineRasterizationStateCreateInfo,
+    PipelineShaderStageCreateInfo, PipelineVertexInputStateCreateInfo,
+    PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, RenderPassCreateInfo,
+    SampleCountFlags, ShaderStageFlags, SubpassDescription, VertexInputAttributeDescription,
+    VertexInputBindingDescription, VertexInputRate, Viewport, WriteDescriptorSet,
 };
 
-use crate::{geometry::VertexData, Image, LogicalDevice, Pipeline, Shader, Vec2};
+use crate::{
+    geometry::{Buffer, Mvp, VertexData},
+    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2,
+};
 
 pub struct SubPass(SubpassDescription);
 
@@ -39,16 +44,16 @@ impl Default for SubPass {
 
 pub struct RenderPassBuilder<'a> {
     device: Option<&'a LogicalDevice>,
-    subpasses: &'a [SubPass]
+    subpasses: &'a [SubPass],
 }
 
 impl<'a> RenderPassBuilder<'a> {
-    pub fn logical_device(mut self,device: &'a LogicalDevice) -> Self {
+    pub fn logical_device(mut self, device: &'a LogicalDevice) -> Self {
         self.device = Some(device);
         self
     }
 
-    pub fn subpasses(mut self,subpasses: &'a [SubPass]) -> Self {
+    pub fn subpasses(mut self, subpasses: &'a [SubPass]) -> Self {
         self.subpasses = subpasses;
         self
     }
@@ -56,9 +61,9 @@ impl<'a> RenderPassBuilder<'a> {
     pub fn build(self) -> Result<RenderPass, ()> {
         let device = match self.device {
             Some(x) => x,
-            None => return Err(())
+            None => return Err(()),
         };
-        Ok(RenderPass::new(device,self.subpasses))
+        Ok(RenderPass::new(device, self.subpasses))
     }
 }
 
@@ -66,7 +71,7 @@ impl<'a> Default for RenderPassBuilder<'a> {
     fn default() -> Self {
         Self {
             device: None,
-            subpasses: &[]
+            subpasses: &[],
         }
     }
 }
@@ -106,11 +111,68 @@ impl RenderPass {
         image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
+        mvp: Buffer,
         width: u32,
         height: u32,
-    ) -> Result<Vec<Pipeline>, ()> {
+    ) -> Result<(Vec<Pipeline>, StageDescriptor), ()> {
         if shaders.is_empty() {
             return Err(());
+        }
+
+        let desc_set_layout_bindings = vec![DescriptorSetLayoutBinding::builder()
+            .binding(0)
+            .descriptor_type(DescriptorType::UNIFORM_BUFFER)
+            .descriptor_count(1)
+            .stage_flags(ShaderStageFlags::VERTEX)
+            .build()];
+        let create_info = DescriptorSetLayoutCreateInfo::builder()
+            .bindings(&desc_set_layout_bindings)
+            .build();
+        let desc_set_layout = unsafe {
+            device
+                .inner
+                .create_descriptor_set_layout(&create_info, None)
+                .unwrap()
+        };
+
+        let desc_pool_sizes = vec![DescriptorPoolSize::builder()
+            .ty(DescriptorType::UNIFORM_BUFFER)
+            .descriptor_count(1)
+            .build()];
+        let create_info = DescriptorPoolCreateInfo::builder()
+            .pool_sizes(&desc_pool_sizes)
+            .max_sets(1)
+            .build();
+
+        let desc_pool = unsafe {
+            device
+                .inner
+                .create_descriptor_pool(&create_info, None)
+                .unwrap()
+        };
+
+        let alloc_info = DescriptorSetAllocateInfo::builder()
+            .descriptor_pool(desc_pool)
+            .set_layouts(&[desc_set_layout])
+            .build();
+
+        let desc_sets = unsafe { device.inner.allocate_descriptor_sets(&alloc_info).unwrap() };
+
+        let desc_buf_infos = vec![DescriptorBufferInfo::builder()
+            .buffer(mvp.buffer)
+            .offset(0)
+            .range(std::mem::size_of::<Mvp>() as u64)
+            .build()];
+        let write_desc_set = WriteDescriptorSet::builder()
+            .dst_set(desc_sets[0])
+            .dst_binding(0)
+            .dst_array_element(0)
+            .descriptor_type(DescriptorType::UNIFORM_BUFFER)
+            .buffer_info(&desc_buf_infos)
+            .build();
+
+        unsafe {
+            device.inner.update_descriptor_sets(&[write_desc_set], &[]);
         }
 
         let vertex_binding_description = vec![VertexInputBindingDescription::builder()
@@ -195,7 +257,9 @@ impl RenderPass {
             .logic_op_enable(false)
             .attachments(&blend_attachment)
             .build();
-        let layout_create_info = PipelineLayoutCreateInfo::builder().set_layouts(&[]).build();
+        let layout_create_info = PipelineLayoutCreateInfo::builder()
+            .set_layouts(&[desc_set_layout])
+            .build();
 
         let pipeline_layout = match unsafe {
             device
@@ -239,10 +303,15 @@ impl RenderPass {
 
         let mut pipelines = vec![];
 
+        let stage_desc = StageDescriptor {
+            desc_sets,
+            pipeline_layout,
+        };
+
         for i in pipeline {
             pipelines.push(Pipeline { inner: i });
         }
 
-        Ok(pipelines)
+        Ok((pipelines, stage_desc))
     }
 }
