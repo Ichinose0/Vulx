@@ -104,6 +104,7 @@ impl RenderTarget for PngRenderTarget {
                 &self.offsets,
             );
             println!("Vertex buffer");
+            self.logical_device.inner.cmd_bind_descriptor_sets(self.buffer.cmd_buffers[0],PipelineBindPoint::GRAPHICS,self.pipeline.layout,0,&[self.pipeline.desc_sets[0]],&[]);
             self.logical_device.inner.cmd_draw(
                 self.buffer.cmd_buffers[0],
                 self.vertex,

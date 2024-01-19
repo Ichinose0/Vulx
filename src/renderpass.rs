@@ -11,7 +11,7 @@ use ash::vk::{
     PrimitiveTopology, Rect2D, RenderPassCreateInfo, SampleCountFlags, ShaderStageFlags,
     SubpassDescription, VertexInputAttributeDescription, VertexInputBindingDescription,
     VertexInputRate, Viewport,DescriptorSetLayoutBinding,DescriptorType,DescriptorSetLayoutCreateInfo,
-
+    DescriptorPoolSize,DescriptorPoolCreateInfo,DescriptorSetAllocateInfo,WriteDescriptorSet,DescriptorBufferInfo,
 };
 
 use crate::{geometry::VertexData, Image, LogicalDevice, Pipeline, Shader, Vec2};
@@ -107,7 +107,7 @@ impl RenderPass {
         image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
-        mvp: buffer,
+        mvp: Buffer,
         width: u32,
         height: u32,
     ) -> Result<Vec<Pipeline>, ()> {
@@ -120,6 +120,27 @@ impl RenderPass {
         let desc_set_layout = unsafe {
             device.inner.create_descriptor_set_layout(&create_info,None).unwrap()
         };
+
+        let desc_pool_sizes = vec![DescriptorPoolSize::builder().type(DescriptorType::UNIFORM_BUFFER).descriptor_count(1).build()];
+        let create_info = DescriptorPoolCreateInfo::builder().pool_sizes(&desc_pool_sizes).max_sets(1).build();
+
+        let desc_pool = unsafe {
+            device.inner.create_descriptor_pool(&create_info,None).unwrap()
+        };
+
+        let alloc_info = DescriptorSetAllocateInfo::builder().descriptor_pool(desc_pool).set_layouts(desc_set_layout).build();
+
+        let desc_sets = unsafe {
+            device.inner.allocate_descriptor_sets(&alloc_info,None).unwrap()
+        };
+
+        
+        let desc_buf_infos = vec![DescriptorBufferInfo::builder().buffer(mvp.inner).offset(0).range(std::mem::size_of::<Mvp>() as u64).build()];
+        let write_desc_set = WriteDescriptorSet::builder().dst_set(desc_sets[0]).dst_binding(0).dst_array_element(0).descriptor_type(DescriptorType::UNIFORM_BUFFER).buffer_info(&desc_buf_infos).build();
+
+        unsafe {
+            device.inner.update_descriptor_sets(&[write_desc_set],&[]);
+        }
 
 
         let vertex_binding_description = vec![VertexInputBindingDescription::builder()
@@ -249,7 +270,7 @@ impl RenderPass {
         let mut pipelines = vec![];
 
         for i in pipeline {
-            pipelines.push(Pipeline { inner: i });
+            pipelines.push(Pipeline { inner: i,desc_sets, layout: pipeline_layout });
         }
 
         Ok(pipelines)

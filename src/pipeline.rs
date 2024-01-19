@@ -108,5 +108,7 @@ impl<'a> Default for PipelineBuilder<'a> {
 #[derive(Clone, Copy)]
 pub struct Pipeline {
     pub(crate) inner: ash::vk::Pipeline,
+    pub(crate) layout: PipelineLayout,
+    pub(crate) desc_sets: Vec<DescriptorSet>,
 }
 
