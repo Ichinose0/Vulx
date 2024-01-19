@@ -16,9 +16,11 @@ png = "0.17.11"
 libc = "0.2.152"
 
 nalgebra = "0.32.3"
+
 num-traits = "0.2.17"
 
 ash-window = { version = "0.9.1", optional = true }
 
 [dev-dependencies]
 winit = "0.29.10"
+nalgebra-glm = "0.18.0"

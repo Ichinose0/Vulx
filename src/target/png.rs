@@ -9,7 +9,7 @@ use super::CommandBuffer;
 
 use crate::{
     geometry::PathGeometry, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
-    Pipeline, Queue, RenderPass, RenderTarget, Vec2, Vec3, Vec4,
+    Pipeline, Queue, RenderPass, RenderTarget, StageDescriptor, Vec2, Vec3, Vec4,
 };
 
 pub struct PngRenderTarget {
@@ -26,6 +26,8 @@ pub struct PngRenderTarget {
     pub(crate) vertex: u32,
     pub(crate) buffers: Vec<ash::vk::Buffer>,
     pub(crate) offsets: Vec<u64>,
+
+    pub(crate) descriptor: StageDescriptor,
 
     pub(crate) image: Option<Image>,
     pub(crate) path: String,
@@ -104,7 +106,14 @@ impl RenderTarget for PngRenderTarget {
                 &self.offsets,
             );
             println!("Vertex buffer");
-            self.logical_device.inner.cmd_bind_descriptor_sets(self.buffer.cmd_buffers[0],PipelineBindPoint::GRAPHICS,self.pipeline.layout,0,&[self.pipeline.desc_sets[0]],&[]);
+            self.logical_device.inner.cmd_bind_descriptor_sets(
+                self.buffer.cmd_buffers[0],
+                PipelineBindPoint::GRAPHICS,
+                self.descriptor.pipeline_layout,
+                0,
+                &[self.descriptor.desc_sets[0]],
+                &[],
+            );
             self.logical_device.inner.cmd_draw(
                 self.buffer.cmd_buffers[0],
                 self.vertex,
@@ -160,11 +169,15 @@ impl Drop for PngRenderTarget {
         self.logical_device.destroy_render_pass(&self.render_pass);
         self.logical_device.destroy_command_buffer(&self.buffer);
         unsafe {
-            self.logical_device.inner.destroy_image(self.image.unwrap().inner, None);
+            self.logical_device
+                .inner
+                .destroy_image(self.image.unwrap().inner, None);
             for i in &self.buffers {
                 self.logical_device.inner.destroy_buffer(*i, None);
             }
-            self.logical_device.inner.destroy_framebuffer(self.frame_buffer.inner, None);
+            self.logical_device
+                .inner
+                .destroy_framebuffer(self.frame_buffer.inner, None);
         }
     }
 }

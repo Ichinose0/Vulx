@@ -9,9 +9,10 @@ use ash::vk::{
 use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
-    geometry::PathGeometry, FrameBuffer, Image, ImageView, Instance, IntoPath, LogicalDevice,
-    PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, ShaderKind, Spirv, SubPass,
-    Vec2, Vec3,
+    geometry::{Mvp, PathGeometry},
+    identity, look_at, perspective, radians, FrameBuffer, Image, ImageView, Instance, IntoPath,
+    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, ShaderKind,
+    Spirv, SubPass, Vec2, Vec3,
 };
 
 pub struct HwndRenderTarget {
@@ -116,16 +117,27 @@ impl RenderTarget for HwndRenderTarget {
                         }
                         self.render_pass = RenderPass::new(&self.logical_device, &subpasses);
 
-                        self.pipeline = self
-                            .render_pass
-                            .create_pipeline(
-                                &self.images[0],
-                                &self.logical_device,
-                                &[self.fragment_shader, self.vertex_shader],
-                                capabilities.current_extent.width,
-                                capabilities.current_extent.height,
-                            )
+                        let projection = perspective(radians(45.0), 640.0 / 800.0, 0.1, 100.0);
+                        let view = look_at(
+                            Vec3::new(4.0, 3.0, 3.0),
+                            Vec3::new(0.0, 0.0, 0.0),
+                            Vec3::new(0.0, 1.0, 0.0),
+                        );
+                        let model = identity(1.0);
+
+                        let mvp = Mvp::new(model, view, projection);
+
+                        let (pipeline, descriptor) = Pipeline::builder()
+                            .image(&I)
+                            .logical_device(&self.logical_device)
+                            .shaders(&[self.fragment_shader, self.vertex_shader])
+                            .width(capabilities.current_extent.width)
+                            .height(capabilities.current_extent.height)
+                            .mvp(mvp)
+                            .build(&self.instance, self.physical_device)
                             .unwrap();
+
+                        self.pipeline = pipeline;
 
                         for i in image_view {
                             self.frame_buffers.push(

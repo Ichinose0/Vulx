@@ -1,8 +1,9 @@
 use Vulx::{
-    geometry::PathGeometry,
+    geometry::{Mvp, PathGeometry},
+    identity, look_at, perspective, radians,
     target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
-    Color, ImageBuilder, InstanceBuilder, IntoPath, RenderPass, RenderTarget, ShaderKind, Spirv,
-    SubPass, Vec2, Vec3, Vec4,
+    translate, Color, ImageBuilder, InstanceBuilder, IntoPath, Mat4, Pipeline, PipelineBuilder,
+    RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, Vec2, Vec3, Vec4,
 };
 
 fn main() {
@@ -53,26 +54,37 @@ fn main() {
         .unwrap();
 
     let fragment_shader = device
-        .create_shader_module(
-            Spirv::new("examples/shader/shader.frag.spv"),
-            ShaderKind::Fragment,
-        )
+        .create_shader_module(Spirv::new("shader.frag.spv"), ShaderKind::Fragment)
         .unwrap();
     let vertex_shader = device
-        .create_shader_module(
-            Spirv::new("examples/shader/shader.vert.spv"),
-            ShaderKind::Vertex,
-        )
+        .create_shader_module(Spirv::new("shader.vert.spv"), ShaderKind::Vertex)
         .unwrap();
 
-    let pipeline = render_pass
-        .create_pipeline(
-            &image.inner,
-            &device,
-            &[fragment_shader, vertex_shader],
-            640,
-            480,
-        )
+    let projection = nalgebra_glm::perspective(640.0/480.0, 45.0*(180.0/std::f32::consts::PI), 0.1, 100.0);
+
+    let view = nalgebra_glm::look_at(
+        &Vec3::new(2.0,0.0,1.0),
+        &Vec3::new(0.0,0.0,0.0),
+        &Vec3::new(0.0,1.0,0.0)
+    );
+    
+    let model = nalgebra_glm::identity();
+
+    let mvp = Mvp::new(
+        model,
+        view,
+        projection
+    );
+
+    let (pipeline, descriptor) = Pipeline::builder()
+        .image(&image)
+        .render_pass(&render_pass)
+        .logical_device(&device)
+        .shaders(&[fragment_shader, vertex_shader])
+        .width(640)
+        .height(480)
+        .mvp(mvp)
+        .build(&instance, physical_devices[suitable_device.unwrap()])
         .unwrap();
 
     let command_buffer = CommandBuffer::new(&device, queue_family_index);
@@ -91,18 +103,16 @@ fn main() {
     //     ),
     // );
 
-    triangle.rectangle(
-        Vec4::new(
-            Vec4::new(-0.5, -0.5, 0.0, 1.0),
-            Vec4::new(0.5, -0.5, 0.0, 1.0),
-            Vec4::new(0.5, 0.5, 0.0, 1.0),
-            Vec4::new(-0.5, 0.5, 0.0, 1.0),
+    triangle.triangle(
+        Vec3::new(
+            Vec4::new(0.0, -1.0, 0.0, 1.0),
+            Vec4::new(1.0, 1.0, 0.0, 1.0),
+            Vec4::new(-1.0, 1.0, 0.0, 1.0),
         ),
-        Vec4::new(
+        Vec3::new(
             Vec4::new(1.0, 0.0, 0.0, 1.0),
             Vec4::new(0.0, 1.0, 0.0, 1.0),
             Vec4::new(0.0, 0.0, 1.0, 1.0),
-            Vec4::new(1.0, 1.0, 0.0, 1.0),
         ),
     );
 
@@ -116,13 +126,14 @@ fn main() {
         .queue(queue)
         .renderpass(render_pass)
         .frame_buffer(frame_buffer)
+        .descriptor(descriptor)
         .build_png("Example.png")
         .unwrap();
 
     render_target.begin();
     render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
     render_target.end();
-    let device = render_target.logical_device();    
+    let device = render_target.logical_device();
 
     for i in &pipeline {
         device.destroy_pipeline(i);
