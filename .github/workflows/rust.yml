@@ -8,29 +8,30 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-
+  
 jobs:
   combo:
     name: cargo test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Install nightly toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
 
-      - name: Install nightly toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-
-      - name: Install Vulkan sdk
-        run: |-
-          sudo apt install libvulkan1 mesa-vulkan-drivers
+    - name: Install Vulkan
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libvulkan-dev
 
 
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose
+    - name: Run cargo test
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --verbose
