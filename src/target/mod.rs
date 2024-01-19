@@ -16,7 +16,7 @@ pub use png::*;
 
 use crate::{
     FrameBuffer, Image, Instance, LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass,
-    StageDescriptor,
+    StageDescriptor, VlResult,
 };
 
 pub struct RenderTargetBuilder {
@@ -301,13 +301,13 @@ pub struct CommandBuffer {
 }
 
 impl CommandBuffer {
-    pub fn new(device: &LogicalDevice, queue_family_index: usize) -> Self {
-        let command_pool = device.create_command_pool(queue_family_index);
-        let cmd_buffers = device.allocate_command_buffer(command_pool);
-        Self {
+    pub fn new(device: &LogicalDevice, queue_family_index: usize) -> VlResult<Self> {
+        let command_pool = device.create_command_pool(queue_family_index)?;
+        let cmd_buffers = device.allocate_command_buffer(command_pool)?;
+        Ok(Self {
             command_pool,
             cmd_buffers,
-        }
+        })
     }
 
     pub(crate) fn begin(&self, device: &LogicalDevice) {

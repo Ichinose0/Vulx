@@ -3,7 +3,7 @@ use libc::c_void;
 use crate::{
     geometry::{Buffer, BufferUsage, Mvp},
     identity, Image, Instance, LogicalDevice, PhysicalDevice, RenderPass, Shader, ShaderKind,
-    Spirv, StageDescriptor,
+    Spirv, StageDescriptor, VlResult, VlError,
 };
 
 pub enum VertexDataLayout {
@@ -62,18 +62,18 @@ impl<'a> PipelineBuilder<'a> {
         mut self,
         instance: &Instance,
         physical_device: PhysicalDevice,
-    ) -> Result<(Vec<Pipeline>, StageDescriptor), ()> {
+    ) -> VlResult<(Vec<Pipeline>, StageDescriptor)> {
         let renderpass = match self.renderpass {
             Some(x) => x,
-            None => return Err(()),
+            None => return Err(crate::VlError::MissingParameter("render_pass")),
         };
         let device = match self.device {
             Some(x) => x,
-            None => return Err(()),
+            None => return Err(crate::VlError::MissingParameter("logical_device")),
         };
         let image = match self.image {
             Some(x) => x,
-            None => return Err(()),
+            None => return Err(crate::VlError::MissingParameter("image")),
         };
         let mvp = match self.mvp {
             Some(x) => x,

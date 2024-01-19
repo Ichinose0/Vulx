@@ -24,15 +24,23 @@ pub use stage::*;
 use thiserror::Error;
 pub use types::*;
 
-pub type VlResult<'a,T> = std::result::Result<T, VlError<'a>>;
+pub type VlResult<T> = std::result::Result<T, VlError>;
 
 
 #[derive(Debug, Error)]
-pub enum VlError<'a> {
+pub enum VlError {
     #[error("Parameter: `{0}` not found.")]
-    MissingParameter(&'a str),
+    MissingParameter(&'static str),
     #[error("`{0}`")]
     VkException(#[from] ash::vk::Result),
+    #[error("`{0}`")]
+    HardwareError(#[from] HardwareError)
+}
+
+#[derive(Debug, Error)]
+pub enum HardwareError {
+    #[error("No suitable device found.")]
+    NoSuitableDevice
 }
 
 #[cfg(test)]

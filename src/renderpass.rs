@@ -17,7 +17,7 @@ use ash::vk::{
 
 use crate::{
     geometry::{Buffer, Mvp, VertexData},
-    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2,
+    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2, VlResult, VlError,
 };
 
 pub struct SubPass(SubpassDescription);
@@ -114,9 +114,9 @@ impl RenderPass {
         mvp: Buffer,
         width: u32,
         height: u32,
-    ) -> Result<(Vec<Pipeline>, StageDescriptor), ()> {
+    ) -> VlResult<(Vec<Pipeline>, StageDescriptor)> {
         if shaders.is_empty() {
-            return Err(());
+            return Err(VlError::MissingParameter("shaders"));
         }
 
         let desc_set_layout_bindings = vec![DescriptorSetLayoutBinding::builder()
@@ -128,11 +128,15 @@ impl RenderPass {
         let create_info = DescriptorSetLayoutCreateInfo::builder()
             .bindings(&desc_set_layout_bindings)
             .build();
-        let desc_set_layout = unsafe {
+        let desc_set_layout = match unsafe {
             device
                 .inner
                 .create_descriptor_set_layout(&create_info, None)
-                .unwrap()
+        } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(VlError::from(e));
+            }
         };
 
         let desc_pool_sizes = vec![DescriptorPoolSize::builder()
@@ -144,11 +148,15 @@ impl RenderPass {
             .max_sets(1)
             .build();
 
-        let desc_pool = unsafe {
+        let desc_pool = match unsafe {
             device
                 .inner
                 .create_descriptor_pool(&create_info, None)
-                .unwrap()
+        } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(VlError::from(e));
+            }
         };
 
         let alloc_info = DescriptorSetAllocateInfo::builder()
@@ -223,10 +231,6 @@ impl RenderPass {
                 .build()])
             .scissors(&[scissors])
             .build();
-        let vertex_input_info = PipelineVertexInputStateCreateInfo::builder()
-            .vertex_attribute_descriptions(&[])
-            .vertex_binding_descriptions(&[])
-            .build();
         let input_assembly = PipelineInputAssemblyStateCreateInfo::builder()
             .topology(PrimitiveTopology::TRIANGLE_LIST)
             .primitive_restart_enable(false)
@@ -268,7 +272,7 @@ impl RenderPass {
         } {
             Ok(p) => p,
             Err(e) => {
-                return Err(());
+                return Err(VlError::from(e));
             }
         };
 
@@ -292,14 +296,18 @@ impl RenderPass {
             .stages(&shader_stages)
             .build();
 
-        let pipeline = unsafe {
+        let pipeline = match unsafe {
             device.inner.create_graphics_pipelines(
                 PipelineCache::null(),
                 &[pipeline_create_info],
                 None,
             )
-        }
-        .unwrap();
+        } {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(VlError::from(e.1));
+            }
+        };
 
         let mut pipelines = vec![];
 

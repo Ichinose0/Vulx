@@ -1,15 +1,14 @@
 use Vulx::{
     geometry::{Mvp, PathGeometry},
-    identity, look_at, perspective, radians,
-    target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
-    translate, Color, ImageBuilder, InstanceBuilder, IntoPath, Mat4, Pipeline, PipelineBuilder,
-    RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, Vec2, Vec3, Vec4,
+    target::{CommandBuffer, RenderTargetBuilder},
+    Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder,
+    RenderPass, RenderTarget, ShaderKind, Spirv, SubPass, Vec3, Vec4,
 };
 
 fn main() {
-    let instance = InstanceBuilder::new().build();
+    let instance = InstanceBuilder::new().build().unwrap();
     let mut queue_family_index = 0;
-    let physical_device = instance.default_physical_device(&mut queue_family_index);
+    let physical_device = instance.default_physical_device(&mut queue_family_index).unwrap();
 
     let device = instance.create_logical_device(physical_device, queue_family_index);
     let queue = device.get_queue(queue_family_index);
@@ -76,7 +75,7 @@ fn main() {
         .build(&instance, physical_device)
         .unwrap();
 
-    let command_buffer = CommandBuffer::new(&device, queue_family_index);
+    let command_buffer = CommandBuffer::new(&device, queue_family_index).unwrap();
 
     let mut triangle = PathGeometry::new();
 
