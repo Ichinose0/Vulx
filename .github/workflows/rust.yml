@@ -24,6 +24,11 @@ jobs:
           toolchain: nightly
           override: true
 
+      - name: Install Vulkan sdk
+        run: |-
+          sudo apt install libvulkan1 mesa-vulkan-drivers vulkan-utils
+
+
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
