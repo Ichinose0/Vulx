@@ -84,6 +84,30 @@ impl Instance {
         devices
     }
 
+    pub fn default_physical_device(&self,queue_family_index: &mut usize) -> PhysicalDevice {
+        let devices = self.enumerate_physical_device();
+        let mut index = 0;
+        let mut found_suitable_device = false;
+        for (_, i) in devices.iter().enumerate() {
+            let props = self.get_queue_properties(*i);
+            for (n, i) in props.iter().enumerate() {
+                let graphic = i.is_graphic_support();
+                let compute = i.is_compute_support();
+                let transfer = i.is_transfer_support();
+                if graphic && compute && transfer {
+                    index = n;
+                    found_suitable_device = true;
+                    *queue_family_index = n;
+                    break;
+                }
+            }
+        }
+        if !found_suitable_device {
+            panic!("No suitable physical device found");
+        }
+        devices[index]
+    }
+
     pub fn get_queue_properties(&self, device: PhysicalDevice) -> Vec<QueueProperties> {
         let mut prop = vec![];
         let props = unsafe {

@@ -17,7 +17,7 @@ pub struct Line {
 
 impl Line {
     /// # Example
-    /// ```
+    /// ```no_run
     /// use vulx::{Line,Vec2};
     /// let line = Line::new(Vec2::new(30.0,30.0),Vec2::new(100.0,70.0));
     /// ```

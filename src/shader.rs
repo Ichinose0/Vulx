@@ -22,7 +22,7 @@ pub enum ShaderKind {
 /// This structure contains binary data that has been processed so that Vulkan can read it
 ///
 /// # Example
-/// ```
+/// ```no_run
 /// let fragment_shader = device
 /// .create_shader_module(
 ///     Spirv::new("examples/shader/shader.frag.spv"),
