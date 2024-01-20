@@ -149,8 +149,8 @@ impl Destroy for Buffer {
 }
 
 pub struct Path {
-    pub(crate) buffers: Vec<(Buffer,usize)>,
-    pub(crate) index_buffers: Vec<(Buffer,usize)>,
+    pub(crate) buffers: Vec<Buffer>,
+    pub(crate) index_buffers: Vec<(Buffer, usize)>,
 }
 
 impl Destroy for Path {
@@ -253,7 +253,7 @@ impl PathGeometry {
                     color: color[3],
                 },
             ],
-            indices: vec![0, 1, 3, 1, 2, 3],
+            indices: vec![0, 1, 2, 1, 0, 3],
         };
         self.index_buffer.push(index_buffer);
     }
@@ -301,8 +301,8 @@ impl IntoPath for PathGeometry {
                 BufferUsage::Index,
             );
             index_buffer.allocate_data(i.indices.as_ptr() as *const c_void, device);
-            buffers.push((buffer,i.data.len()));
-            index_buffers.push((index_buffer,i.indices.len()));
+            buffers.push(buffer);
+            index_buffers.push((index_buffer, i.indices.len()));
         }
 
         Path {

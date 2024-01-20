@@ -12,12 +12,49 @@ pub enum VertexDataLayout {
     Vertex4Color4,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
+pub enum PolygonMode {
+    #[default]
+    Fill,
+    Line,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
+pub enum PrimitiveTopology {
+    #[default]
+    TriangleList,
+    TriangleStrip,
+    TriangleFan,
+}
+
+impl Into<ash::vk::PrimitiveTopology> for PrimitiveTopology {
+    fn into(self) -> ash::vk::PrimitiveTopology {
+        match self {
+            PrimitiveTopology::TriangleFan => ash::vk::PrimitiveTopology::TRIANGLE_FAN,
+            PrimitiveTopology::TriangleList => ash::vk::PrimitiveTopology::TRIANGLE_LIST,
+            PrimitiveTopology::TriangleStrip => ash::vk::PrimitiveTopology::TRIANGLE_STRIP,
+        }
+    }
+}
+
+impl Into<ash::vk::PolygonMode> for PolygonMode {
+    fn into(self) -> ash::vk::PolygonMode {
+        match self {
+            PolygonMode::Fill => ash::vk::PolygonMode::FILL,
+            PolygonMode::Line => ash::vk::PolygonMode::LINE,
+        }
+    }
+}
+
 pub struct PipelineBuilder<'a> {
     renderpass: Option<&'a RenderPass>,
     device: Option<&'a LogicalDevice>,
     shaders: Vec<Shader>,
     image: Option<&'a Image>,
     stage: Option<&'a mut Stage>,
+    mode: PolygonMode,
+    topology: PrimitiveTopology,
+    line_width: f32,
     width: u32,
     height: u32,
 }
@@ -41,12 +78,25 @@ impl<'a> PipelineBuilder<'a> {
         self.image = Some(image);
         self
     }
+    pub fn mode(mut self, mode: PolygonMode) -> Self {
+        self.mode = mode;
+        self
+    }
+    pub fn topology(mut self, topology: PrimitiveTopology) -> Self {
+        self.topology = topology;
+        self
+    }
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
     }
     pub fn height(mut self, height: u32) -> Self {
         self.height = height;
+        self
+    }
+
+    pub fn line_width(mut self, line_width: f32) -> Self {
+        self.line_width = line_width;
         self
     }
 
@@ -88,12 +138,14 @@ impl<'a> PipelineBuilder<'a> {
         }
 
         renderpass.create_pipeline(
-            &image.inner,
             device,
             &self.shaders,
             stage,
+            self.mode.into(),
+            self.topology.into(),
             self.width,
             self.height,
+            self.line_width,
         )
     }
 }
@@ -105,9 +157,12 @@ impl<'a> Default for PipelineBuilder<'a> {
             device: None,
             shaders: vec![],
             image: None,
+            stage: None,
+            mode: Default::default(),
+            topology: Default::default(),
             width: 100,
             height: 100,
-            stage: None,
+            line_width: 1.0,
         }
     }
 }
