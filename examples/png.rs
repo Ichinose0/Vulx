@@ -102,6 +102,22 @@ fn main() {
         ),
     );
 
+    triangle.rectangle(
+        Vec4::new(
+            Vec4::new(800.0,100.0,0.0,1.0),
+            Vec4::new(1150.0,100.0,0.0,1.0),
+            Vec4::new(1150.0,400.0,0.0,1.0),
+            Vec4::new(800.0,400.0,0.0,1.0)
+        )
+        ,
+        Vec4::new(
+            Vec4::new(1.0,0.0,0.0,1.0),
+            Vec4::new(1.0,1.0,1.0,1.0),
+            Vec4::new(0.0,1.0,0.0,1.0),
+            Vec4::new(0.0,0.0,1.0,1.0)
+        )
+    );
+
     let mut render_target = RenderTargetBuilder::new()
         .instance(instance)
         .command_buffer(command_buffer)

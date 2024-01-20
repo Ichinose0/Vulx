@@ -39,6 +39,7 @@ impl Line {
 pub enum BufferUsage {
     Vertex,
     Uniform,
+    Index
 }
 
 pub(crate) struct Buffer {
@@ -59,6 +60,7 @@ impl Buffer {
         let usage = match usage {
             BufferUsage::Vertex => ash::vk::BufferUsageFlags::VERTEX_BUFFER,
             BufferUsage::Uniform => ash::vk::BufferUsageFlags::UNIFORM_BUFFER,
+            BufferUsage::Index => ash::vk::BufferUsageFlags::INDEX_BUFFER,
         };
         let create_info = BufferCreateInfo::builder()
             .size(size as u64)
@@ -148,6 +150,7 @@ impl Destroy for Buffer {
 
 pub struct Path {
     pub(crate) buffer: Buffer,
+    pub(crate) index_buffer: Option<Vec<(Buffer,Buffer)>>,
     pub(crate) size: usize,
 }
 
@@ -168,6 +171,11 @@ impl Destroy for Path {
 pub(crate) struct VertexData {
     pub(crate) pos: Vec4<f32>,
     pub(crate) color: Vec4<f32>,
+}
+
+pub(crate) struct IndexBuffer {
+    pub(crate) data: Vec<VertexData>,
+    pub(crate) indices: Vec<u32>
 }
 
 pub struct Mvp {
@@ -196,11 +204,12 @@ impl Default for Mvp {
 #[derive(Default)]
 pub struct PathGeometry {
     vertices: Vec<VertexData>,
+    index_buffer: Vec<IndexBuffer>
 }
 
 impl PathGeometry {
     pub fn new() -> Self {
-        Self { vertices: vec![] }
+        Self { vertices: vec![], index_buffer: vec![] }
     }
 
     pub fn triangle(&mut self, vert: Vec3<Vec4<f32>>, color: Vec3<Vec4<f32>>) {
@@ -213,30 +222,24 @@ impl PathGeometry {
     }
 
     pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>, color: Vec4<Vec4<f32>>) {
-        self.vertices.push(VertexData {
-            pos: vert[0],
-            color: color[0],
-        });
-        self.vertices.push(VertexData {
-            pos: vert[2],
-            color: color[2],
-        });
-        self.vertices.push(VertexData {
-            pos: vert[3],
-            color: color[3],
-        });
-        self.vertices.push(VertexData {
-            pos: vert[2],
-            color: color[2],
-        });
-        self.vertices.push(VertexData {
-            pos: vert[0],
-            color: color[0],
-        });
-        self.vertices.push(VertexData {
-            pos: vert[1],
-            color: color[1],
-        });
+        let index_buffer = IndexBuffer {
+            data: vec![
+                VertexData { 
+                    pos: vert[0], color: color[0] 
+                },
+                VertexData { 
+                    pos: vert[1], color: color[1] 
+                },
+                VertexData { 
+                    pos: vert[2], color: color[2] 
+                },
+                VertexData { 
+                    pos: vert[3], color: color[3] 
+                },
+            ],
+            indices: vec![0, 1, 2, 1, 0, 3],
+        };
+        self.index_buffer.push(index_buffer);
     }
 
     pub fn geometries(&mut self, vertices: Vec<Vec4<f32>>, color: Vec<Vec4<f32>>) {
@@ -267,9 +270,32 @@ impl IntoPath for PathGeometry {
             BufferUsage::Vertex,
         );
         buffer.allocate_data(self.vertices.as_ptr() as *const c_void, device);
+        let mut index_buffer = None;
+        if !self.index_buffer.is_empty() {
+            let mut ib = vec![];
+            for i in &self.index_buffer {
+                let mut buffer = Buffer::new(
+                    instance,
+                    physical_device,
+                    device,
+                    std::mem::size_of::<VertexData>() * i.data.len(),
+                    BufferUsage::Vertex,
+                );
+                buffer.allocate_data(i.data.as_ptr() as *const c_void, device);
+                let mut index_buffer = Buffer::new(instance, physical_device, device, std::mem::size_of::<u32>()*i.indices.len(), BufferUsage::Index);
+                index_buffer.allocate_data(i.indices.as_ptr() as *const c_void, device);
+
+                ib.push((buffer,index_buffer));
+            }
+
+
+            index_buffer = Some(ib);
+        }
+        
         Path {
             buffer,
             size: self.size(),
+            index_buffer,
         }
     }
 }
