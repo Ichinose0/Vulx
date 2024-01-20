@@ -10,7 +10,7 @@ use super::CommandBuffer;
 use crate::{
     geometry::{Path, PathGeometry},
     FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice, Pipeline, Queue,
-    RenderPass, RenderTarget, StageDescriptor, Vec2, Vec3, Vec4,
+    RenderPass, RenderTarget, Stage, StageDescriptor, Vec2, Vec3, Vec4,
 };
 
 pub struct PngRenderTarget {
@@ -31,7 +31,7 @@ pub struct PngRenderTarget {
     pub(crate) width: u32,
     pub(crate) height: u32,
 
-    pub(crate) descriptor: StageDescriptor,
+    pub(crate) stage: Stage,
 
     pub(crate) image: Option<Image>,
     pub(crate) path: String,
@@ -111,9 +111,9 @@ impl RenderTarget for PngRenderTarget {
             self.logical_device.inner.cmd_bind_descriptor_sets(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
-                self.descriptor.pipeline_layout,
+                self.stage.descriptor.as_ref().unwrap().pipeline_layout,
                 0,
-                &[self.descriptor.desc_sets[0]],
+                &[self.stage.descriptor.as_ref().unwrap().desc_sets[0]],
                 &[],
             );
             self.logical_device.inner.cmd_draw(
@@ -187,7 +187,7 @@ impl Drop for PngRenderTarget {
                 .destroy_framebuffer(self.frame_buffer.inner, None);
         }
         self.logical_device.destroy(&self.image.unwrap());
-        self.logical_device.destroy(&self.descriptor);
+        //self.logical_device.destroy(&self.descriptor);
         self.instance.destroy(&self.logical_device);
     }
 }

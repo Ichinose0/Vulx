@@ -2,7 +2,7 @@ use ash::vk::{DescriptorPool, DescriptorSet, DescriptorSetLayout, PipelineLayout
 use libc::c_void;
 
 use crate::{
-    geometry::{Buffer, Mvp, BufferUsage},
+    geometry::{Buffer, BufferUsage, Mvp},
     Destroy, Instance, LogicalDevice, Mat4, PhysicalDevice, Pipeline, VlError, VlResult,
 };
 
@@ -11,7 +11,6 @@ pub struct StageBuilder<'a> {
     device: Option<&'a LogicalDevice>,
     physical_device: Option<PhysicalDevice>,
 
-    pipeline: Vec<Pipeline>,
     camera: Option<Camera>,
     mode: StageMode,
     width: u32,
@@ -19,6 +18,18 @@ pub struct StageBuilder<'a> {
 }
 
 impl<'a> StageBuilder<'a> {
+    pub fn instance(mut self, instance: &'a Instance) -> Self {
+        self.instance = Some(instance);
+        self
+    }
+    pub fn logical_device(mut self, logical_device: &'a LogicalDevice) -> Self {
+        self.device = Some(logical_device);
+        self
+    }
+    pub fn physical_device(mut self, physical_device: PhysicalDevice) -> Self {
+        self.physical_device = Some(physical_device);
+        self
+    }
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
         self
@@ -30,15 +41,15 @@ impl<'a> StageBuilder<'a> {
     pub fn build(self) -> VlResult<Stage> {
         let instance = match self.instance {
             Some(x) => x,
-            None => return Err(VlError::MissingParameter("instance"))
+            None => return Err(VlError::MissingParameter("instance")),
         };
         let device = match self.device {
             Some(x) => x,
-            None => return Err(VlError::MissingParameter("instance"))
+            None => return Err(VlError::MissingParameter("instance")),
         };
         let physical_device = match self.physical_device {
             Some(x) => x,
-            None => return Err(VlError::MissingParameter("instance"))
+            None => return Err(VlError::MissingParameter("instance")),
         };
         let projection = match self.mode {
             StageMode::Ortho => {
@@ -71,13 +82,12 @@ impl<'a> StageBuilder<'a> {
         );
 
         Ok(Stage {
-            pipeline: self.pipeline,
             camera: self.camera,
             width: self.width,
             height: self.height,
             buffer,
             mvp,
-            descriptor: None
+            descriptor: None,
         })
     }
 }
@@ -88,7 +98,6 @@ pub enum StageMode {
 }
 
 pub struct Stage {
-    pub(crate) pipeline: Vec<Pipeline>,
     pub(crate) camera: Option<Camera>,
 
     pub(crate) width: u32,
@@ -97,7 +106,7 @@ pub struct Stage {
     pub(crate) mvp: Mvp,
     pub(crate) buffer: Buffer,
 
-    pub(crate) descriptor: Option<StageDescriptor>
+    pub(crate) descriptor: Option<StageDescriptor>,
 }
 
 impl Stage {
@@ -106,7 +115,6 @@ impl Stage {
             instance: None,
             device: None,
             physical_device: None,
-            pipeline: vec![],
             camera: None,
             mode: StageMode::Ortho,
             width: 100,
@@ -116,7 +124,6 @@ impl Stage {
 }
 
 pub struct StageDescriptor {
-    pub(crate) mvp: Buffer,
     pub(crate) desc_sets: Vec<DescriptorSet>,
     pub(crate) desc_pool: DescriptorPool,
     pub(crate) desc_layout: DescriptorSetLayout,
@@ -136,7 +143,6 @@ impl Destroy for StageDescriptor {
                 .inner
                 .destroy_descriptor_set_layout(self.desc_layout, None);
         }
-        device.destroy(&self.mvp)
     }
 }
 

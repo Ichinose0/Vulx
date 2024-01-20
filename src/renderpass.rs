@@ -17,7 +17,7 @@ use ash::vk::{
 
 use crate::{
     geometry::{Buffer, Mvp, VertexData},
-    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2, VlError, VlResult,
+    Image, LogicalDevice, Pipeline, Shader, Stage, StageDescriptor, Vec2, VlError, VlResult,
 };
 
 pub struct SubPass(SubpassDescription);
@@ -111,10 +111,10 @@ impl RenderPass {
         image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
-        mvp: Buffer,
+        stage: &mut Stage,
         width: u32,
         height: u32,
-    ) -> VlResult<(Vec<Pipeline>, StageDescriptor)> {
+    ) -> VlResult<Vec<Pipeline>> {
         if shaders.is_empty() {
             return Err(VlError::MissingParameter("shaders"));
         }
@@ -163,7 +163,7 @@ impl RenderPass {
         let desc_sets = unsafe { device.inner.allocate_descriptor_sets(&alloc_info).unwrap() };
 
         let desc_buf_infos = vec![DescriptorBufferInfo::builder()
-            .buffer(mvp.buffer)
+            .buffer(stage.buffer.buffer)
             .offset(0)
             .range(std::mem::size_of::<Mvp>() as u64)
             .build()];
@@ -308,17 +308,18 @@ impl RenderPass {
         let mut pipelines = vec![];
 
         let stage_desc = StageDescriptor {
-            mvp,
             desc_sets,
             desc_pool,
             desc_layout: desc_set_layout,
             pipeline_layout,
         };
 
+        stage.descriptor = Some(stage_desc);
+
         for i in pipeline {
             pipelines.push(Pipeline { inner: i });
         }
 
-        Ok((pipelines, stage_desc))
+        Ok(pipelines)
     }
 }
