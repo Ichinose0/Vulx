@@ -1,8 +1,8 @@
 use vulx::{
     geometry::{Mvp, PathGeometry},
     target::{CommandBuffer, RenderTargetBuilder},
-    Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, RenderPass, RenderTarget,
-    ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4,
+    Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, PolygonMode, RenderPass,
+    RenderTarget, ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4,
 };
 
 const WIDTH: u32 = 1280;
@@ -104,16 +104,16 @@ fn main() {
 
     triangle.rectangle(
         Vec4::new(
-            Vec4::new(50.0, 60.0, 0.0, 1.0),
-            Vec4::new(1230.0, 60.0, 0.0, 1.0),
-            Vec4::new(1230.0, 680.0, 0.0, 1.0),
-            Vec4::new(50.0, 680.0, 0.0, 1.0),
+            Vec4::new(50.0, 50.0, 0.0, 1.0),
+            Vec4::new(1230.0, 670.0, 0.0, 1.0),
+            Vec4::new(50.0, 670.0, 0.0, 1.0),
+            Vec4::new(1230.0, 50.0, 0.0, 1.0),
         ),
         Vec4::new(
             Vec4::new(0.0, 0.0, 1.0, 1.0),
-            Vec4::new(1.0, 1.0, 1.0, 1.0),
             Vec4::new(0.0, 1.0, 0.0, 1.0),
             Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(1.0, 1.0, 1.0, 1.0),
         ),
     );
 

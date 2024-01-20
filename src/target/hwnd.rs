@@ -281,15 +281,27 @@ impl RenderTarget for HwndRenderTarget {
                 &[],
             );
             for path in &self.paths {
+                let mut b = vec![];
+                let mut offsets = vec![];
+                path.buffers.iter().map(|x| {
+                    b.push(x.buffer);
+                    offsets.push(0);
+                });
+                self.logical_device.inner.cmd_bind_vertex_buffers(
+                    self.buffer.cmd_buffers[0],
+                    0,
+                    &b,
+                    &offsets,
+                );
                 for (n, i) in path.buffers.iter().enumerate() {
-                    let (buffer,buffer_size) = i;
+                    let buffer = i;
                     self.logical_device.inner.cmd_bind_vertex_buffers(
                         self.buffer.cmd_buffers[0],
                         0,
                         &[buffer.buffer],
                         &[0],
                     );
-                    let (index_buffer,index_size) = &path.index_buffers[n];
+                    let (index_buffer, index_size) = &path.index_buffers[n];
                     self.logical_device.inner.cmd_bind_index_buffer(
                         self.buffer.cmd_buffers[0],
                         index_buffer.buffer,

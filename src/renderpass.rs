@@ -95,12 +95,14 @@ impl RenderPass {
     }
     pub fn create_pipeline(
         &self,
-        image: &ash::vk::Image,
         device: &LogicalDevice,
         shaders: &[Shader],
         stage: &mut Stage,
+        mode: PolygonMode,
+        topology: PrimitiveTopology,
         width: u32,
         height: u32,
+        line_width: f32,
     ) -> VlResult<Vec<Pipeline>> {
         if shaders.is_empty() {
             return Err(VlError::MissingParameter("shaders"));
@@ -215,14 +217,14 @@ impl RenderPass {
             .scissors(&[scissors])
             .build();
         let input_assembly = PipelineInputAssemblyStateCreateInfo::builder()
-            .topology(PrimitiveTopology::TRIANGLE_LIST)
+            .topology(topology)
             .primitive_restart_enable(false)
             .build();
         let rasterizer = PipelineRasterizationStateCreateInfo::builder()
             .depth_clamp_enable(false)
             .rasterizer_discard_enable(false)
-            .polygon_mode(PolygonMode::FILL)
-            .line_width(1.0)
+            .polygon_mode(mode)
+            .line_width(line_width)
             .cull_mode(CullModeFlags::BACK)
             .front_face(FrontFace::CLOCKWISE)
             .depth_bias_enable(false)
