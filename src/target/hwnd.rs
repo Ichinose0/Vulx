@@ -6,10 +6,8 @@ use ash::vk::{
 use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
-    geometry::{Mvp, Path},
-    identity, look_at, perspective, radians, FrameBuffer, Image, ImageView, Instance, IntoPath,
-    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, Stage,
-    StageDescriptor, SubPass, Vec3,
+    geometry::Path, FrameBuffer, Image, ImageView, Instance, IntoPath, LogicalDevice,
+    PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, Stage, SubPass,
 };
 
 pub struct HwndRenderTarget {
@@ -59,7 +57,7 @@ impl RenderTarget for HwndRenderTarget {
                 .wait_for_fences(&[self.fence], true, u64::MAX)
                 .unwrap();
 
-            self.img_index = match unsafe {
+            self.img_index = match {
                 self.swapchain.inner.acquire_next_image(
                     self.swapchain.khr,
                     1000000000,
@@ -70,15 +68,11 @@ impl RenderTarget for HwndRenderTarget {
                 Ok(i) => {
                     if i.1 {
                         for i in &self.frame_buffers {
-                            unsafe {
-                                self.logical_device.inner.destroy_framebuffer(i.inner, None);
-                            }
+                            self.logical_device.inner.destroy_framebuffer(i.inner, None);
                         }
                         self.frame_buffers.clear();
                         for i in &self.image_view {
-                            unsafe {
-                                self.logical_device.inner.destroy_image_view(i.inner, None);
-                            }
+                            self.logical_device.inner.destroy_image_view(i.inner, None);
                         }
                         self.image_view.clear();
 
@@ -91,8 +85,6 @@ impl RenderTarget for HwndRenderTarget {
                         self.stage.width = capabilities.current_extent.width;
                         self.stage.height = capabilities.current_extent.height;
                         self.swapchain = swapchain;
-                        println!("Recreate swapchain");
-                        println!("Cleared image view");
 
                         self.images = self
                             .swapchain
@@ -109,15 +101,8 @@ impl RenderTarget for HwndRenderTarget {
                         for i in &self.pipeline {
                             self.logical_device.destroy_pipeline(i);
                         }
-                        self.render_pass = RenderPass::new(&self.logical_device, &subpasses);
 
-                        let projection = perspective(radians(45.0), 640.0 / 800.0, 0.1, 100.0);
-                        let view = look_at(
-                            Vec3::new(4.0, 3.0, 3.0),
-                            Vec3::new(0.0, 0.0, 0.0),
-                            Vec3::new(0.0, 1.0, 0.0),
-                        );
-                        let model = identity(1.0);
+                        self.render_pass = RenderPass::new(&self.logical_device, &subpasses);
 
                         let pipeline = Pipeline::builder()
                             .image(&Image::from(self.images[0]))
@@ -167,27 +152,19 @@ impl RenderTarget for HwndRenderTarget {
                         || result == ash::vk::Result::ERROR_OUT_OF_DATE_KHR
                     {
                         for i in &self.frame_buffers {
-                            unsafe {
-                                self.logical_device.inner.destroy_framebuffer(i.inner, None);
-                            }
+                            self.logical_device.inner.destroy_framebuffer(i.inner, None);
                         }
                         self.frame_buffers.clear();
                         for i in &self.image_view {
-                            unsafe {
-                                self.logical_device.inner.destroy_image_view(i.inner, None);
-                            }
+                            self.logical_device.inner.destroy_image_view(i.inner, None);
                         }
                         self.image_view.clear();
                         for i in &self.images {
-                            unsafe {
-                                self.logical_device.inner.destroy_image(*i, None);
-                            }
+                            self.logical_device.inner.destroy_image(*i, None);
                         }
                         self.images.clear();
                         for i in &self.pipeline {
-                            unsafe {
-                                self.logical_device.destroy_pipeline(i);
-                            }
+                            self.logical_device.destroy_pipeline(i);
                         }
                         self.logical_device.destroy_render_pass(&self.render_pass);
                         println!("Cleared images");
@@ -278,23 +255,20 @@ impl RenderTarget for HwndRenderTarget {
         }
     }
 
-    fn fill<P>(&mut self, path: &mut P, color: crate::Color, thickness: f64)
+    fn fill<P>(&mut self, path: &mut P, _: crate::Color, _: f64)
     where
         P: IntoPath,
     {
-        unsafe {
-            if self.paths.is_empty() {
-                let path =
-                    path.into_path(&self.instance, self.physical_device, &self.logical_device);
+        if self.paths.is_empty() {
+            let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
-                self.vertex += path.size as u32;
-                self.paths.push(path);
-                self.offsets.push(0);
-            }
+            self.vertex += path.size as u32;
+            self.paths.push(path);
+            self.offsets.push(0);
         }
     }
 
-    fn stroke<P>(&mut self, path: P, color: crate::Color, thickness: f64)
+    fn stroke<P>(&mut self, _: P, _: crate::Color, _: f64)
     where
         P: IntoPath,
     {

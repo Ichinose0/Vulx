@@ -47,9 +47,7 @@ impl LogicalDevice {
             .build();
         match unsafe { self.inner.create_command_pool(&create_info, None) } {
             Ok(x) => Ok(x),
-            Err(e) => {
-                return Err(VlError::from(e));
-            }
+            Err(e) => Err(VlError::from(e)),
         }
     }
 
@@ -65,9 +63,7 @@ impl LogicalDevice {
             .build();
         match unsafe { self.inner.allocate_command_buffers(&create_info) } {
             Ok(x) => Ok(x),
-            Err(e) => {
-                return Err(VlError::from(e));
-            }
+            Err(e) => Err(VlError::from(e)),
         }
     }
 

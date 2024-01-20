@@ -138,9 +138,8 @@ impl Destroy for Buffer {
 
     fn destroy_with_device(&self, device: &LogicalDevice) {
         unsafe {
-            match self.memory {
-                Some(x) => device.inner.free_memory(x, None),
-                None => {}
+            if let Some(x) = self.memory {
+                device.inner.free_memory(x, None)
             }
             device.inner.destroy_buffer(self.buffer, None);
         }
@@ -158,11 +157,8 @@ impl Destroy for Path {
     fn destroy_with_device(&self, device: &LogicalDevice) {
         unsafe {
             device.inner.destroy_buffer(self.buffer.buffer, None);
-            match self.buffer.memory {
-                Some(x) => {
-                    device.inner.free_memory(x, None);
-                }
-                None => {}
+            if let Some(x) = self.buffer.memory {
+                device.inner.free_memory(x, None);
             }
         }
     }
@@ -197,6 +193,7 @@ impl Default for Mvp {
 }
 
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
+#[derive(Default)]
 pub struct PathGeometry {
     vertices: Vec<VertexData>,
 }

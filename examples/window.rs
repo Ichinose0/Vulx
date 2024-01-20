@@ -1,19 +1,19 @@
+use vulx::{
+    geometry::PathGeometry,
+    target::{CommandBuffer, RenderTargetBuilder},
+    Color, ImageBuilder, InstanceBuilder, InstanceTarget, RenderPass, RenderTarget, ShaderKind,
+    Spirv, SubPass, Vec3, Vec4,
+};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::EventLoop,
     raw_window_handle::HasWindowHandle,
     window::WindowBuilder,
 };
-use Vulx::{
-    geometry::PathGeometry,
-    target::{CommandBuffer, PngRenderTarget, RenderTargetBuilder},
-    Color, ImageBuilder, InstanceBuilder, InstanceTarget, IntoPath, RenderPass, RenderTarget,
-    ShaderKind, Spirv, SubPass, Vec2, Vec3, Vec4,
-};
 
 #[cfg(target_os = "windows")]
 fn main() {
-    use Vulx::{geometry::Mvp, Pipeline, Stage};
+    use vulx::{Pipeline, Stage};
 
     let event_loop = EventLoop::new().unwrap();
 
@@ -23,7 +23,10 @@ fn main() {
         .build(&event_loop)
         .unwrap();
     let win_size = window.inner_size();
-    let instance = InstanceBuilder::new().targets(vec![InstanceTarget::Window]).build().unwrap();
+    let instance = InstanceBuilder::new()
+        .targets(vec![InstanceTarget::Window])
+        .build()
+        .unwrap();
     let mut queue_family_index = 0;
     let physical_device = instance
         .default_physical_device(&mut queue_family_index)
@@ -32,11 +35,10 @@ fn main() {
     let device = instance.create_logical_device(physical_device, queue_family_index);
     let queue = device.get_queue(queue_family_index);
 
-    let image =
-        ImageBuilder::new()
-            .width(win_size.width)
-            .height(win_size.height)
-            .build(&instance, physical_device, &device);
+    let image = ImageBuilder::new()
+        .width(win_size.width)
+        .height(win_size.height)
+        .build(&instance, physical_device, &device);
     let image_view = image.create_image_view(&device).unwrap();
 
     let subpasses = vec![SubPass::new()];
@@ -117,7 +119,13 @@ fn main() {
             .stage(stage)
             .image(Some(image))
             .queue(queue)
-            .build_hwnd(isize::from(handle.hwnd), 0, win_size.width, win_size.height,vec![fragment_shader,vertex_shader])
+            .build_hwnd(
+                isize::from(handle.hwnd),
+                0,
+                win_size.width,
+                win_size.height,
+                vec![fragment_shader, vertex_shader],
+            )
             .unwrap(),
         _ => todo!(),
     };

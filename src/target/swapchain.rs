@@ -8,16 +8,6 @@ use crate::{ImageView, Instance, LogicalDevice, PhysicalDevice};
 
 use super::surface::Surface;
 
-pub struct AcquireImageResult {
-    pub state: SwapchainState,
-    pub buffer_index: usize,
-}
-
-pub enum SwapchainState {
-    Validity,
-    Invalid,
-}
-
 pub struct Swapchain {
     pub(crate) inner: ash::extensions::khr::Swapchain,
     pub(crate) khr: SwapchainKHR,
