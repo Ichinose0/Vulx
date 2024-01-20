@@ -15,9 +15,10 @@ pub use png::*;
 
 use crate::{
     FrameBuffer, Image, Instance, LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass,
-    Stage, VlResult,
+    Stage, VlError, VlResult,
 };
 
+#[derive(Default)]
 pub struct RenderTargetBuilder {
     buffer: Option<CommandBuffer>,
     device: Option<LogicalDevice>,
@@ -99,8 +100,6 @@ impl RenderTargetBuilder {
         use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
         use libc::c_void;
 
-        use crate::VlError;
-
         let buffer = match self.buffer {
             Some(b) => b,
             None => return Err(VlError::MissingParameter("command_buffer")),
@@ -120,10 +119,6 @@ impl RenderTargetBuilder {
         let queue = match self.queue {
             Some(b) => b,
             None => return Err(VlError::MissingParameter("queue")),
-        };
-        let frame_buffer = match self.frame_buffer {
-            Some(b) => b,
-            None => return Err(VlError::MissingParameter("frame_buffer")),
         };
         let render_pass = match self.renderpass {
             Some(b) => b,
@@ -199,47 +194,42 @@ impl RenderTargetBuilder {
         })
     }
 
-    pub fn build_png(
-        self,
-        file_path: &str,
-        width: u32,
-        height: u32,
-    ) -> Result<PngRenderTarget, ()> {
+    pub fn build_png(self, file_path: &str, width: u32, height: u32) -> VlResult<PngRenderTarget> {
         let buffer = match self.buffer {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("command_buffer")),
         };
         let physical_device = match self.physical_device {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("physical_device")),
         };
         let device = match self.device {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("logical_device")),
         };
         let instance = match self.instance {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("instance")),
         };
         let queue = match self.queue {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("queue")),
         };
         let frame_buffer = match self.frame_buffer {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("frame_buffer")),
         };
         let renderpass = match self.renderpass {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("render_pass")),
         };
         let pipeline = match self.pipeline {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("pipeline")),
         };
         let stage = match self.stage {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("stage")),
         };
         Ok(PngRenderTarget {
             instance,
@@ -259,23 +249,6 @@ impl RenderTargetBuilder {
             paths: vec![],
             offsets: vec![],
         })
-    }
-}
-
-impl Default for RenderTargetBuilder {
-    fn default() -> Self {
-        Self {
-            buffer: None,
-            device: None,
-            physical_device: None,
-            instance: None,
-            queue: None,
-            frame_buffer: None,
-            renderpass: None,
-            pipeline: None,
-            stage: None,
-            image: None,
-        }
     }
 }
 
@@ -326,7 +299,7 @@ impl CommandBuffer {
         let info = vec![SubmitInfo::builder()
             .command_buffers(&submit_cmd_buf)
             .wait_semaphores(semaphores)
-            .signal_semaphores(&signal_semaphores)
+            .signal_semaphores(signal_semaphores)
             .wait_dst_stage_mask(wait_dst_stage_mask)
             .build()];
         unsafe {

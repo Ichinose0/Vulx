@@ -20,6 +20,7 @@ use crate::{
     LogicalDevice, Pipeline, Shader, Stage, StageDescriptor, VlError, VlResult,
 };
 
+#[derive(Default)]
 pub struct SubPass(SubpassDescription);
 
 impl SubPass {
@@ -36,12 +37,7 @@ impl SubPass {
     }
 }
 
-impl Default for SubPass {
-    fn default() -> Self {
-        Self(Default::default())
-    }
-}
-
+#[derive(Default)]
 pub struct RenderPassBuilder<'a> {
     device: Option<&'a LogicalDevice>,
     subpasses: &'a [SubPass],
@@ -64,15 +60,6 @@ impl<'a> RenderPassBuilder<'a> {
             None => return Err(()),
         };
         Ok(RenderPass::new(device, self.subpasses))
-    }
-}
-
-impl<'a> Default for RenderPassBuilder<'a> {
-    fn default() -> Self {
-        Self {
-            device: None,
-            subpasses: &[],
-        }
     }
 }
 

@@ -78,7 +78,7 @@ impl<'a> StageBuilder<'a> {
         );
         buffer.allocate_data(
             vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
-            &device,
+            device,
         );
 
         Ok(Stage {

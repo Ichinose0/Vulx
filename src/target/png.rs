@@ -148,7 +148,7 @@ impl RenderTarget for PngRenderTarget {
         let slice: &[u8] = unsafe {
             std::slice::from_raw_parts(data as *const u8, (self.width * self.height * 4) as usize)
         };
-        writer.write_image_data(&slice).unwrap();
+        writer.write_image_data(slice).unwrap();
         unsafe {
             self.logical_device
                 .inner

@@ -3,9 +3,11 @@ use std::ffi::c_void;
 use crate::Instance;
 use ash::vk::SurfaceKHR;
 
+#[allow(clippy::upper_case_acronyms)]
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
 pub type HWND = *const c_void;
+#[allow(clippy::upper_case_acronyms)]
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
 pub type HINSTANCE = *const c_void;
