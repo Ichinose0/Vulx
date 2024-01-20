@@ -23,8 +23,6 @@ cargo run --example png
 ```
 
 # Goals
-Fast compilation time. Right now it is ~5s from "cargo clean" for both desktop and web.
-
 Cross platform. Amount of platform specific user code required should be kept as little as possible.
 
 # License
