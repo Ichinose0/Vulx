@@ -2,7 +2,7 @@ use Vulx::{
     geometry::{Mvp, PathGeometry},
     target::{CommandBuffer, RenderTargetBuilder},
     Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, RenderPass, RenderTarget,
-    ShaderKind, Spirv, SubPass, Vec3, Vec4,
+    ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4,
 };
 
 const WIDTH: u32 = 1280;
@@ -52,31 +52,23 @@ fn main() {
         )
         .unwrap();
 
-    let projection = nalgebra_glm::perspective(
-        WIDTH as f32 / HEIGHT as f32,
-        45.0 * (180.0 / std::f32::consts::PI),
-        0.1,
-        100.0,
-    );
+    let mut stage = Stage::builder()
+        .instance(&instance)
+        .logical_device(&device)
+        .physical_device(physical_device)
+        .width(WIDTH)
+        .height(HEIGHT)
+        .build()
+        .unwrap();
 
-    let view = nalgebra_glm::look_at(
-        &Vec3::new(2.0, 0.0, 1.0),
-        &Vec3::new(0.0, 0.0, 0.0),
-        &Vec3::new(0.0, 1.0, 0.0),
-    );
-
-    let model = nalgebra_glm::identity();
-
-    let mvp = Mvp::new(model, view, projection);
-
-    let (pipeline, descriptor) = Pipeline::builder()
+    let pipeline = Pipeline::builder()
         .image(&image)
         .render_pass(&render_pass)
         .logical_device(&device)
         .shaders(&[fragment_shader, vertex_shader])
         .width(WIDTH)
         .height(HEIGHT)
-        .mvp(mvp)
+        .stage(&mut stage)
         .build(&instance, physical_device)
         .unwrap();
 
@@ -86,9 +78,9 @@ fn main() {
 
     triangle.triangle(
         Vec3::new(
-            Vec4::new(0.0, -1.0, 0.0, 1.0),
-            Vec4::new(1.0, 1.0, 0.0, 1.0),
-            Vec4::new(-1.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 0.0, 1.0),
+            Vec4::new(100.0, 300.0, 0.0, 1.0),
+            Vec4::new(0.0, 300.0, 0.0, 1.0),
         ),
         Vec3::new(
             Vec4::new(1.0, 0.0, 0.0, 1.0),
@@ -107,7 +99,7 @@ fn main() {
         .queue(queue)
         .renderpass(render_pass)
         .frame_buffer(frame_buffer)
-        .descriptor(descriptor)
+        .stage(stage)
         .build_png("Example.png", WIDTH, HEIGHT)
         .unwrap();
 

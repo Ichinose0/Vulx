@@ -16,7 +16,7 @@ pub use png::*;
 
 use crate::{
     FrameBuffer, Image, Instance, LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass,
-    StageDescriptor, VlResult,
+    Stage, StageDescriptor, VlResult,
 };
 
 pub struct RenderTargetBuilder {
@@ -28,7 +28,7 @@ pub struct RenderTargetBuilder {
     frame_buffer: Option<FrameBuffer>,
     renderpass: Option<RenderPass>,
     pipeline: Option<Pipeline>,
-    descriptor: Option<StageDescriptor>,
+    stage: Option<Stage>,
     image: Option<Image>,
 }
 
@@ -82,8 +82,8 @@ impl RenderTargetBuilder {
         self
     }
 
-    pub fn descriptor(mut self, descriptor: StageDescriptor) -> Self {
-        self.descriptor = Some(descriptor);
+    pub fn stage(mut self, stage: Stage) -> Self {
+        self.stage = Some(stage);
         self
     }
 
@@ -260,7 +260,7 @@ impl RenderTargetBuilder {
             Some(b) => b,
             None => return Err(()),
         };
-        let descriptor = match self.descriptor {
+        let stage = match self.stage {
             Some(b) => b,
             None => return Err(()),
         };
@@ -276,7 +276,7 @@ impl RenderTargetBuilder {
             image: self.image,
             path: file_path.to_owned(),
             vertex: 0,
-            descriptor,
+            stage,
             width,
             height,
             paths: vec![],
@@ -296,7 +296,7 @@ impl Default for RenderTargetBuilder {
             frame_buffer: None,
             renderpass: None,
             pipeline: None,
-            descriptor: None,
+            stage: None,
             image: None,
         }
     }

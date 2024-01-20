@@ -3,7 +3,7 @@ use libc::c_void;
 use crate::{
     geometry::{Buffer, BufferUsage, Mvp},
     identity, Image, Instance, LogicalDevice, PhysicalDevice, RenderPass, Shader, ShaderKind,
-    Spirv, StageDescriptor, VlError, VlResult,
+    Spirv, Stage, StageDescriptor, VlError, VlResult,
 };
 
 pub enum VertexDataLayout {
@@ -20,7 +20,7 @@ pub struct PipelineBuilder<'a> {
     device: Option<&'a LogicalDevice>,
     shaders: Vec<Shader>,
     image: Option<&'a Image>,
-    mvp: Option<Mvp>,
+    stage: Option<&'a mut Stage>,
     width: u32,
     height: u32,
 }
@@ -53,8 +53,8 @@ impl<'a> PipelineBuilder<'a> {
         self
     }
 
-    pub fn mvp(mut self, mvp: Mvp) -> Self {
-        self.mvp = Some(mvp);
+    pub fn stage(mut self, stage: &'a mut Stage) -> Self {
+        self.stage = Some(stage);
         self
     }
 
@@ -62,7 +62,7 @@ impl<'a> PipelineBuilder<'a> {
         mut self,
         instance: &Instance,
         physical_device: PhysicalDevice,
-    ) -> VlResult<(Vec<Pipeline>, StageDescriptor)> {
+    ) -> VlResult<Vec<Pipeline>> {
         let renderpass = match self.renderpass {
             Some(x) => x,
             None => return Err(crate::VlError::MissingParameter("render_pass")),
@@ -75,9 +75,9 @@ impl<'a> PipelineBuilder<'a> {
             Some(x) => x,
             None => return Err(crate::VlError::MissingParameter("image")),
         };
-        let mvp = match self.mvp {
+        let stage = match self.stage {
             Some(x) => x,
-            None => Mvp::new(identity(1.0), identity(1.0), identity(1.0)),
+            None => return Err(crate::VlError::MissingParameter("stage")),
         };
         if self.shaders.is_empty() {
             let vertex = device
@@ -90,23 +90,11 @@ impl<'a> PipelineBuilder<'a> {
             self.shaders.push(fragment);
         }
 
-        let mut buffer = Buffer::new(
-            instance,
-            physical_device,
-            &device,
-            std::mem::size_of::<Mvp>(),
-            BufferUsage::Uniform,
-        );
-        buffer.allocate_data(
-            vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
-            &device,
-        );
-
         renderpass.create_pipeline(
             &image.inner,
             device,
             &self.shaders,
-            buffer,
+            stage,
             self.width,
             self.height,
         )
@@ -122,7 +110,7 @@ impl<'a> Default for PipelineBuilder<'a> {
             image: None,
             width: 100,
             height: 100,
-            mvp: None,
+            stage: None,
         }
     }
 }
