@@ -2,7 +2,7 @@ use Vulx::{
     geometry::{Mvp, PathGeometry},
     target::{CommandBuffer, RenderTargetBuilder},
     Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, RenderPass, RenderTarget,
-    ShaderKind, Spirv, SubPass, Vec3, Vec4,
+    ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4,
 };
 
 const WIDTH: u32 = 1280;
@@ -68,6 +68,8 @@ fn main() {
     let model = nalgebra_glm::identity();
 
     let mvp = Mvp::new(model, view, projection);
+
+    let stage = Stage::builder().width(WIDTH).height(HEIGHT).build();
 
     let (pipeline, descriptor) = Pipeline::builder()
         .image(&image)
