@@ -167,6 +167,8 @@ impl RenderTarget for PngRenderTarget {
             self.logical_device.destroy(i);
         }
         self.paths.clear();
+        self.vertex = 0;
+        self.offsets.clear();
     }
 }
 
