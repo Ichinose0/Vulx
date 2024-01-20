@@ -255,10 +255,7 @@ impl RenderTarget for HwndRenderTarget {
         }
     }
 
-    fn fill<P>(&mut self, path: &mut P, _: crate::Color, _: f64)
-    where
-        P: IntoPath,
-    {
+    fn fill(&mut self, path: &mut impl IntoPath) {
         if self.paths.is_empty() {
             let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
@@ -268,11 +265,7 @@ impl RenderTarget for HwndRenderTarget {
         }
     }
 
-    fn stroke<P>(&mut self, _: P, _: crate::Color, _: f64)
-    where
-        P: IntoPath,
-    {
-    }
+    fn stroke(&mut self, path: &mut impl IntoPath, _: f64) {}
 
     fn end(&mut self) {
         unsafe {

@@ -140,7 +140,7 @@ fn main() {
                     // Notify the windowing system that we'll be presenting to the window.
 
                     render_target.begin();
-                    render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
+                    render_target.fill(&mut triangle);
                     render_target.end();
                 }
                 WindowEvent::Resized(size) => {
