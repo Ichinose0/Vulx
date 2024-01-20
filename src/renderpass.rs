@@ -17,7 +17,7 @@ use ash::vk::{
 
 use crate::{
     geometry::{Buffer, Mvp, VertexData},
-    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2, VlResult, VlError,
+    Image, LogicalDevice, Pipeline, Shader, StageDescriptor, Vec2, VlError, VlResult,
 };
 
 pub struct SubPass(SubpassDescription);
@@ -148,11 +148,7 @@ impl RenderPass {
             .max_sets(1)
             .build();
 
-        let desc_pool = match unsafe {
-            device
-                .inner
-                .create_descriptor_pool(&create_info, None)
-        } {
+        let desc_pool = match unsafe { device.inner.create_descriptor_pool(&create_info, None) } {
             Ok(x) => x,
             Err(e) => {
                 return Err(VlError::from(e));
@@ -312,7 +308,10 @@ impl RenderPass {
         let mut pipelines = vec![];
 
         let stage_desc = StageDescriptor {
+            mvp,
             desc_sets,
+            desc_pool,
+            desc_layout: desc_set_layout,
             pipeline_layout,
         };
 

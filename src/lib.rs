@@ -26,7 +26,6 @@ pub use types::*;
 
 pub type VlResult<T> = std::result::Result<T, VlError>;
 
-
 #[derive(Debug, Error)]
 pub enum VlError {
     #[error("Parameter: `{0}` not found.")]
@@ -34,13 +33,13 @@ pub enum VlError {
     #[error("`{0}`")]
     VkException(#[from] ash::vk::Result),
     #[error("`{0}`")]
-    HardwareError(#[from] HardwareError)
+    HardwareError(#[from] HardwareError),
 }
 
 #[derive(Debug, Error)]
 pub enum HardwareError {
     #[error("No suitable device found.")]
-    NoSuitableDevice
+    NoSuitableDevice,
 }
 
 #[cfg(test)]

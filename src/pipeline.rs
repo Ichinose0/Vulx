@@ -3,7 +3,7 @@ use libc::c_void;
 use crate::{
     geometry::{Buffer, BufferUsage, Mvp},
     identity, Image, Instance, LogicalDevice, PhysicalDevice, RenderPass, Shader, ShaderKind,
-    Spirv, StageDescriptor, VlResult, VlError,
+    Spirv, StageDescriptor, VlError, VlResult,
 };
 
 pub enum VertexDataLayout {
@@ -90,7 +90,7 @@ impl<'a> PipelineBuilder<'a> {
             self.shaders.push(fragment);
         }
 
-        let buffer = Buffer::new(
+        let mut buffer = Buffer::new(
             instance,
             physical_device,
             &device,

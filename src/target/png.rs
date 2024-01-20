@@ -8,8 +8,9 @@ use ash::vk::{
 use super::CommandBuffer;
 
 use crate::{
-    geometry::PathGeometry, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
-    Pipeline, Queue, RenderPass, RenderTarget, StageDescriptor, Vec2, Vec3, Vec4,
+    geometry::{Path, PathGeometry},
+    FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice, Pipeline, Queue,
+    RenderPass, RenderTarget, StageDescriptor, Vec2, Vec3, Vec4,
 };
 
 pub struct PngRenderTarget {
@@ -24,8 +25,11 @@ pub struct PngRenderTarget {
     pub(crate) pipeline: Pipeline,
 
     pub(crate) vertex: u32,
-    pub(crate) buffers: Vec<ash::vk::Buffer>,
+    pub(crate) paths: Vec<Path>,
     pub(crate) offsets: Vec<u64>,
+
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 
     pub(crate) descriptor: StageDescriptor,
 
@@ -51,8 +55,8 @@ impl RenderTarget for PngRenderTarget {
                     Rect2D::builder()
                         .extent(
                             Extent2D::builder()
-                                .width(self.image.as_ref().unwrap().viewport.width as u32)
-                                .height(self.image.as_ref().unwrap().viewport.height as u32)
+                                .width(self.width)
+                                .height(self.height)
                                 .build(),
                         )
                         .offset(Offset2D::builder().x(0).y(0).build())
@@ -72,15 +76,13 @@ impl RenderTarget for PngRenderTarget {
     where
         P: IntoPath,
     {
-        unsafe {
-            if self.buffers.is_empty() {
-                let path =
-                    path.into_path(&self.instance, self.physical_device, &self.logical_device);
+        if self.paths.is_empty() {
+            let path =
+                path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
-                self.vertex += path.size as u32;
-                self.buffers.push(path.buffer.buffer);
-                self.offsets.push(0);
-            }
+            self.vertex += path.size as u32;
+            self.paths.push(path);
+            self.offsets.push(0);
         }
     }
 
@@ -97,10 +99,14 @@ impl RenderTarget for PngRenderTarget {
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
+            let mut buffers = vec![];
+            for i in &self.paths {
+                buffers.push(i.buffer.buffer);
+            }
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
                 0,
-                &self.buffers,
+                &buffers,
                 &self.offsets,
             );
             self.logical_device.inner.cmd_bind_descriptor_sets(
@@ -114,7 +120,7 @@ impl RenderTarget for PngRenderTarget {
             self.logical_device.inner.cmd_draw(
                 self.buffer.cmd_buffers[0],
                 self.vertex,
-                self.buffers.len() as u32,
+                self.paths.len() as u32,
                 0,
                 0,
             );
@@ -134,14 +140,14 @@ impl RenderTarget for PngRenderTarget {
         let file = File::create(&self.path).unwrap();
         let w = &mut BufWriter::new(file);
 
-        let mut encoder = png::Encoder::new(w, 640, 480);
+        let mut encoder = png::Encoder::new(w, self.width, self.height);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
 
         let mut writer = encoder.write_header().unwrap();
 
         let data = self.image.unwrap().map_memory(&self.logical_device);
-        let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, 1228800) };
+        let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, (self.width*self.height*4) as usize) };
         writer.write_image_data(&slice).unwrap();
         unsafe {
             self.logical_device
@@ -158,6 +164,10 @@ impl RenderTarget for PngRenderTarget {
     fn logical_device(&self) -> &LogicalDevice {
         &self.logical_device
     }
+
+    fn instance(&self) -> &Instance {
+        &self.instance
+    }
 }
 
 impl Drop for PngRenderTarget {
@@ -168,12 +178,14 @@ impl Drop for PngRenderTarget {
             self.logical_device
                 .inner
                 .destroy_image(self.image.unwrap().inner, None);
-            for i in &self.buffers {
-                self.logical_device.inner.destroy_buffer(*i, None);
+            for i in &self.paths {
+                self.logical_device.destroy(i);
             }
             self.logical_device
                 .inner
                 .destroy_framebuffer(self.frame_buffer.inner, None);
         }
+        self.logical_device.destroy(&self.image.unwrap());
+        self.logical_device.destroy(&self.descriptor);
     }
 }

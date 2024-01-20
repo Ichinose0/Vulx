@@ -1,6 +1,6 @@
 use std::ffi::{c_char, CStr};
 
-use crate::{LogicalDevice, PhysicalDevice, QueueProperties, VlResult, VlError, HardwareError};
+use crate::{HardwareError, LogicalDevice, PhysicalDevice, QueueProperties, VlError, VlResult, Destroy};
 use ash::{
     vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
     Entry,
@@ -48,7 +48,7 @@ impl<'a> InstanceBuilder<'a> {
 
         let inner = match unsafe { self.entry.create_instance(&create_info, None) } {
             Ok(x) => x,
-            Err(e) => return Err(VlError::from(e))
+            Err(e) => return Err(VlError::from(e)),
         };
 
         Ok(Instance {
@@ -89,7 +89,10 @@ impl Instance {
         devices
     }
 
-    pub fn default_physical_device(&self, queue_family_index: &mut usize) -> VlResult<PhysicalDevice> {
+    pub fn default_physical_device(
+        &self,
+        queue_family_index: &mut usize,
+    ) -> VlResult<PhysicalDevice> {
         let devices = self.enumerate_physical_device();
         let mut index = 0;
         let mut found_suitable_device = false;
@@ -110,7 +113,7 @@ impl Instance {
         }
 
         if !found_suitable_device {
-            return Err(VlError::HardwareError(HardwareError::NoSuitableDevice))
+            return Err(VlError::HardwareError(HardwareError::NoSuitableDevice));
         }
 
         Ok(devices[index])
@@ -143,6 +146,13 @@ impl Instance {
             .build();
         let inner = unsafe { self.inner.create_device(device.0, &create_info, None) }.unwrap();
         LogicalDevice { inner }
+    }
+
+    pub fn destroy<D>(&self,object: &D) 
+    where
+        D: Destroy
+    {
+        object.destroy_with_instance(&self);
     }
 }
 

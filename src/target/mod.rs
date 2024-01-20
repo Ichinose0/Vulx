@@ -222,7 +222,7 @@ impl RenderTargetBuilder {
     //     })
     // }
 
-    pub fn build_png(self, file_path: &str) -> Result<PngRenderTarget, ()> {
+    pub fn build_png(self, file_path: &str,width: u32,height: u32) -> Result<PngRenderTarget, ()> {
         let buffer = match self.buffer {
             Some(b) => b,
             None => return Err(()),
@@ -272,7 +272,9 @@ impl RenderTargetBuilder {
             path: file_path.to_owned(),
             vertex: 0,
             descriptor,
-            buffers: vec![],
+            width,
+            height,
+            paths: vec![],
             offsets: vec![],
         })
     }

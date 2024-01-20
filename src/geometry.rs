@@ -1,9 +1,11 @@
 use std::ffi::c_void;
 
-use crate::{identity, Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4};
+use crate::{
+    identity, Destroy, Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4,
+};
 use ash::vk::{
-    BufferCreateInfo, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
-    PhysicalDeviceMemoryProperties,
+    BufferCreateInfo, DeviceMemory, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags,
+    MemoryPropertyFlags, PhysicalDeviceMemoryProperties,
 };
 
 /// # Represents a line segment
@@ -42,6 +44,7 @@ pub enum BufferUsage {
 pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
     pub(crate) mem_prop: PhysicalDeviceMemoryProperties,
+    pub(crate) memory: Option<DeviceMemory>,
     pub(crate) size: usize,
 }
 
@@ -73,11 +76,12 @@ impl Buffer {
         Self {
             buffer,
             mem_prop,
+            memory: None,
             size,
         }
     }
 
-    pub fn allocate_data(&self, data: *const c_void, device: &LogicalDevice) {
+    pub fn allocate_data(&mut self, data: *const c_void, device: &LogicalDevice) {
         let mem_req = unsafe { device.inner.get_buffer_memory_requirements(self.buffer) };
         let mut create_info = MemoryAllocateInfo::builder().allocation_size(mem_req.size);
 
@@ -124,12 +128,46 @@ impl Buffer {
                 .flush_mapped_memory_ranges(&[mapped_memory_range])
                 .unwrap();
             device.inner.unmap_memory(memory);
+            self.memory = Some(memory);
         }
     }
 }
+
+impl Destroy for Buffer {
+    fn destroy_with_instance(&self, instance: &Instance) {
+
+    }
+
+    fn destroy_with_device(&self, device: &LogicalDevice) {
+        unsafe {
+            match self.memory {
+                Some(x) => device.inner.free_memory(x,None),
+                None => {},
+            }
+            device.inner.destroy_buffer(self.buffer,None);
+        }
+    }
+}
+
 pub struct Path {
     pub(crate) buffer: Buffer,
     pub(crate) size: usize,
+}
+
+impl Destroy for Path {
+    fn destroy_with_instance(&self, instance: &Instance) {}
+
+    fn destroy_with_device(&self, device: &LogicalDevice) {
+        unsafe {
+            device.inner.destroy_buffer(self.buffer.buffer, None);
+            match self.buffer.memory {
+                Some(x) => {
+                    device.inner.free_memory(x,None);
+                }
+                None => {}
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -226,7 +264,7 @@ impl IntoPath for PathGeometry {
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
-        let buffer = Buffer::new(
+        let mut buffer = Buffer::new(
             instance,
             physical_device,
             device,

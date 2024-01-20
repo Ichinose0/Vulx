@@ -4,7 +4,7 @@ use std::io::{Cursor, Read};
 const DEFAULT_VERTEX_SHADER: &'static [u8] = include_bytes!("spv/shader.vert.spv");
 const DEFAULT_FRAGMENT_SHADER: &'static [u8] = include_bytes!("spv/shader.frag.spv");
 
-use crate::Vec2;
+use crate::{Vec2, Destroy};
 
 ///Indicates shader type
 ///
@@ -71,4 +71,16 @@ impl Spirv {
 pub struct Shader {
     pub(crate) inner: ShaderModule,
     pub(crate) kind: ShaderKind,
+}
+
+impl Destroy for Shader {
+    fn destroy_with_instance(&self, instance: &crate::Instance) {
+        
+    }
+
+    fn destroy_with_device(&self, device: &crate::LogicalDevice) {
+        unsafe {
+            device.inner.destroy_shader_module(self.inner, None);
+        }
+    }
 }

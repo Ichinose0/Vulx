@@ -5,8 +5,8 @@ use ash::vk::{
 };
 
 use crate::{
-    target::surface::Surface, target::swapchain::Swapchain, Instance, PhysicalDevice, Pipeline,
-    Queue, RenderPass, Shader, ShaderKind, Spirv, VlResult, VlError,
+    target::surface::Surface, target::swapchain::Swapchain, Destroy, Instance, PhysicalDevice,
+    Pipeline, Queue, RenderPass, Shader, ShaderKind, Spirv, VlError, VlResult,
 };
 
 /// Represents a logical device.
@@ -32,6 +32,13 @@ impl LogicalDevice {
         })
     }
 
+    pub fn destroy<D>(&self, object: &D)
+    where
+        D: Destroy,
+    {
+        object.destroy_with_device(&self);
+    }
+
     #[doc(hidden)]
     pub(crate) fn create_command_pool(&self, queue_family_index: usize) -> VlResult<CommandPool> {
         let create_info = CommandPoolCreateInfo::builder()
@@ -47,7 +54,10 @@ impl LogicalDevice {
     }
 
     #[doc(hidden)]
-    pub(crate) fn allocate_command_buffer(&self, command_pool: CommandPool) -> VlResult<Vec<CommandBuffer>> {
+    pub(crate) fn allocate_command_buffer(
+        &self,
+        command_pool: CommandPool,
+    ) -> VlResult<Vec<CommandBuffer>> {
         let create_info = CommandBufferAllocateInfo::builder()
             .command_pool(command_pool)
             .command_buffer_count(1)
@@ -135,10 +145,14 @@ impl LogicalDevice {
     }
 }
 
-impl Drop for LogicalDevice {
-    fn drop(&mut self) {
+impl Destroy for LogicalDevice {
+    fn destroy_with_instance(&self, _: &Instance) {
         unsafe {
             self.inner.destroy_device(None);
         }
+    }
+
+    fn destroy_with_device(&self, _: &LogicalDevice) {
+
     }
 }
