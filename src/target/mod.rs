@@ -222,7 +222,12 @@ impl RenderTargetBuilder {
     //     })
     // }
 
-    pub fn build_png(self, file_path: &str,width: u32,height: u32) -> Result<PngRenderTarget, ()> {
+    pub fn build_png(
+        self,
+        file_path: &str,
+        width: u32,
+        height: u32,
+    ) -> Result<PngRenderTarget, ()> {
         let buffer = match self.buffer {
             Some(b) => b,
             None => return Err(()),

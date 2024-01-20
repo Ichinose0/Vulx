@@ -134,17 +134,15 @@ impl Buffer {
 }
 
 impl Destroy for Buffer {
-    fn destroy_with_instance(&self, instance: &Instance) {
-
-    }
+    fn destroy_with_instance(&self, instance: &Instance) {}
 
     fn destroy_with_device(&self, device: &LogicalDevice) {
         unsafe {
             match self.memory {
-                Some(x) => device.inner.free_memory(x,None),
-                None => {},
+                Some(x) => device.inner.free_memory(x, None),
+                None => {}
             }
-            device.inner.destroy_buffer(self.buffer,None);
+            device.inner.destroy_buffer(self.buffer, None);
         }
     }
 }
@@ -162,7 +160,7 @@ impl Destroy for Path {
             device.inner.destroy_buffer(self.buffer.buffer, None);
             match self.buffer.memory {
                 Some(x) => {
-                    device.inner.free_memory(x,None);
+                    device.inner.free_memory(x, None);
                 }
                 None => {}
             }

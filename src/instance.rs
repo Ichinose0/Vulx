@@ -1,6 +1,8 @@
 use std::ffi::{c_char, CStr};
 
-use crate::{HardwareError, LogicalDevice, PhysicalDevice, QueueProperties, VlError, VlResult, Destroy};
+use crate::{
+    Destroy, HardwareError, LogicalDevice, PhysicalDevice, QueueProperties, VlError, VlResult,
+};
 use ash::{
     vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
     Entry,
@@ -148,9 +150,9 @@ impl Instance {
         LogicalDevice { inner }
     }
 
-    pub fn destroy<D>(&self,object: &D) 
+    pub fn destroy<D>(&self, object: &D)
     where
-        D: Destroy
+        D: Destroy,
     {
         object.destroy_with_instance(&self);
     }

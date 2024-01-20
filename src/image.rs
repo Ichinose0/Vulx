@@ -7,7 +7,7 @@ use ash::vk::{
     Rect2D, SampleCountFlags, SharingMode, Viewport,
 };
 
-use crate::{Instance, LogicalDevice, PhysicalDevice, RenderPass, Destroy};
+use crate::{Destroy, Instance, LogicalDevice, PhysicalDevice, RenderPass};
 
 #[allow(non_camel_case_types)]
 pub enum ImageType {
@@ -104,7 +104,7 @@ impl ImageBuilder {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_image_memory(inner, memory, 0).unwrap();
         }
-        
+
         Image {
             inner,
             memory,
@@ -177,13 +177,11 @@ impl Image {
 }
 
 impl Destroy for Image {
-    fn destroy_with_instance(&self, instance: &Instance) {
-        
-    }
+    fn destroy_with_instance(&self, instance: &Instance) {}
 
     fn destroy_with_device(&self, device: &LogicalDevice) {
         unsafe {
-            device.inner.destroy_image(self.inner,None);
+            device.inner.destroy_image(self.inner, None);
             device.inner.free_memory(self.memory, None);
         }
     }
@@ -217,9 +215,7 @@ impl ImageView {
 }
 
 impl Destroy for ImageView {
-    fn destroy_with_instance(&self, instance: &Instance) {
-        
-    }
+    fn destroy_with_instance(&self, instance: &Instance) {}
 
     fn destroy_with_device(&self, device: &LogicalDevice) {
         unsafe {

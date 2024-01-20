@@ -30,7 +30,7 @@ fn main() {
     let render_pass = RenderPass::new(&device, &subpasses);
 
     let frame_buffer = image_view
-        .create_frame_buffer(&device, &render_pass, WIDTH,HEIGHT)
+        .create_frame_buffer(&device, &render_pass, WIDTH, HEIGHT)
         .unwrap();
 
     let fragment_shader = device
@@ -108,7 +108,7 @@ fn main() {
         .renderpass(render_pass)
         .frame_buffer(frame_buffer)
         .descriptor(descriptor)
-        .build_png("Example.png",WIDTH,HEIGHT)
+        .build_png("Example.png", WIDTH, HEIGHT)
         .unwrap();
 
     render_target.begin();

@@ -77,8 +77,7 @@ impl RenderTarget for PngRenderTarget {
         P: IntoPath,
     {
         if self.paths.is_empty() {
-            let path =
-                path.into_path(&self.instance, self.physical_device, &self.logical_device);
+            let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
             self.vertex += path.size as u32;
             self.paths.push(path);
@@ -147,7 +146,9 @@ impl RenderTarget for PngRenderTarget {
         let mut writer = encoder.write_header().unwrap();
 
         let data = self.image.unwrap().map_memory(&self.logical_device);
-        let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, (self.width*self.height*4) as usize) };
+        let slice: &[u8] = unsafe {
+            std::slice::from_raw_parts(data as *const u8, (self.width * self.height * 4) as usize)
+        };
         writer.write_image_data(&slice).unwrap();
         unsafe {
             self.logical_device

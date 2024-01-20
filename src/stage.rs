@@ -1,6 +1,6 @@
-use ash::vk::{DescriptorSet, PipelineLayout, DescriptorPool, DescriptorSetLayout};
+use ash::vk::{DescriptorPool, DescriptorSet, DescriptorSetLayout, PipelineLayout};
 
-use crate::{Pipeline, Destroy, geometry::Buffer};
+use crate::{geometry::Buffer, Destroy, Pipeline};
 
 pub struct StageBuilder {}
 
@@ -13,15 +13,17 @@ pub struct StageDescriptor {
 }
 
 impl Destroy for StageDescriptor {
-    fn destroy_with_instance(&self, instance: &crate::Instance) {
-        
-    }
+    fn destroy_with_instance(&self, instance: &crate::Instance) {}
 
     fn destroy_with_device(&self, device: &crate::LogicalDevice) {
         unsafe {
-            device.inner.destroy_pipeline_layout(self.pipeline_layout,None);
-            device.inner.destroy_descriptor_pool(self.desc_pool,None);
-            device.inner.destroy_descriptor_set_layout(self.desc_layout,None);
+            device
+                .inner
+                .destroy_pipeline_layout(self.pipeline_layout, None);
+            device.inner.destroy_descriptor_pool(self.desc_pool, None);
+            device
+                .inner
+                .destroy_descriptor_set_layout(self.desc_layout, None);
         }
         device.destroy(&self.mvp)
     }

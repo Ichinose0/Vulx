@@ -152,7 +152,5 @@ impl Destroy for LogicalDevice {
         }
     }
 
-    fn destroy_with_device(&self, _: &LogicalDevice) {
-
-    }
+    fn destroy_with_device(&self, _: &LogicalDevice) {}
 }
