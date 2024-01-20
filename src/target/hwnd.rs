@@ -8,7 +8,7 @@ use super::{swapchain::recreate_swapchain, CommandBuffer};
 use crate::{
     geometry::{Mvp, Path},
     identity, look_at, perspective, radians, FrameBuffer, Image, ImageView, Instance, IntoPath,
-    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader,
+    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, Stage,
     StageDescriptor, SubPass, Vec3,
 };
 
@@ -36,16 +36,12 @@ pub struct HwndRenderTarget {
     pub(crate) paths: Vec<Path>,
     pub(crate) offsets: Vec<u64>,
 
-    pub(crate) descriptor: StageDescriptor,
+    pub(crate) shaders: Vec<Shader>,
+
+    pub(crate) stage: Stage,
 
     pub(crate) swapchain_semaphore: Semaphore,
     pub(crate) rendered_semaphore: Semaphore,
-
-    pub(crate) fragment_shader: Shader,
-    pub(crate) vertex_shader: Shader,
-
-    pub(crate) width: u32,
-    pub(crate) height: u32,
 }
 
 impl HwndRenderTarget {}
@@ -93,8 +89,8 @@ impl RenderTarget for HwndRenderTarget {
                             self.physical_device,
                             &self.surface,
                         );
-                        self.width = capabilities.current_extent.width;
-                        self.height = capabilities.current_extent.height;
+                        self.stage.width = capabilities.current_extent.width;
+                        self.stage.height = capabilities.current_extent.height;
                         self.swapchain = swapchain;
                         println!("Recreate swapchain");
                         println!("Cleared image view");
@@ -126,13 +122,13 @@ impl RenderTarget for HwndRenderTarget {
 
                         let mvp = Mvp::new(model, view, projection);
 
-                        let (pipeline, descriptor) = Pipeline::builder()
+                        let pipeline = Pipeline::builder()
                             .image(&Image::from(self.images[0]))
                             .logical_device(&self.logical_device)
-                            .shaders(&[self.fragment_shader, self.vertex_shader])
+                            .shaders(&self.shaders)
                             .width(capabilities.current_extent.width)
                             .height(capabilities.current_extent.height)
-                            .mvp(mvp)
+                            .stage(&mut self.stage)
                             .build(&self.instance, self.physical_device)
                             .unwrap();
 
@@ -269,8 +265,8 @@ impl RenderTarget for HwndRenderTarget {
                     Rect2D::builder()
                         .extent(
                             Extent2D::builder()
-                                .width(self.width)
-                                .height(self.height)
+                                .width(self.stage.width)
+                                .height(self.stage.height)
                                 .build(),
                         )
                         .offset(Offset2D::builder().x(0).y(0).build())
@@ -328,9 +324,9 @@ impl RenderTarget for HwndRenderTarget {
             self.logical_device.inner.cmd_bind_descriptor_sets(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
-                self.descriptor.pipeline_layout,
+                self.stage.descriptor.as_ref().unwrap().pipeline_layout,
                 0,
-                &[self.descriptor.desc_sets[0]],
+                &[self.stage.descriptor.as_ref().unwrap().desc_sets[0]],
                 &[],
             );
             self.logical_device.inner.cmd_draw(

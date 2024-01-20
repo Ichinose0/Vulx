@@ -13,7 +13,7 @@ use Vulx::{
 
 #[cfg(target_os = "windows")]
 fn main() {
-    use Vulx::{geometry::Mvp, Pipeline};
+    use Vulx::{geometry::Mvp, Pipeline, Stage};
 
     let event_loop = EventLoop::new().unwrap();
 
@@ -23,10 +23,7 @@ fn main() {
         .build(&event_loop)
         .unwrap();
     let win_size = window.inner_size();
-    let instance = InstanceBuilder::new()
-        .targets(vec![InstanceTarget::Window])
-        .build()
-        .unwrap();
+    let instance = InstanceBuilder::new().targets(vec![InstanceTarget::Window]).build().unwrap();
     let mut queue_family_index = 0;
     let physical_device = instance
         .default_physical_device(&mut queue_family_index)
@@ -35,10 +32,11 @@ fn main() {
     let device = instance.create_logical_device(physical_device, queue_family_index);
     let queue = device.get_queue(queue_family_index);
 
-    let image = ImageBuilder::new()
-        .width(win_size.width)
-        .height(win_size.height)
-        .build(&instance, physical_device, &device);
+    let image =
+        ImageBuilder::new()
+            .width(win_size.width)
+            .height(win_size.height)
+            .build(&instance, physical_device, &device);
     let image_view = image.create_image_view(&device).unwrap();
 
     let subpasses = vec![SubPass::new()];
@@ -68,31 +66,23 @@ fn main() {
         )
         .unwrap();
 
-    let projection = nalgebra_glm::perspective(
-        win_size.width as f32 / win_size.height as f32,
-        45.0 * (180.0 / std::f32::consts::PI),
-        0.1,
-        100.0,
-    );
+    let mut stage = Stage::builder()
+        .instance(&instance)
+        .logical_device(&device)
+        .physical_device(physical_device)
+        .width(win_size.width)
+        .height(win_size.height)
+        .build()
+        .unwrap();
 
-    let view = nalgebra_glm::look_at(
-        &Vec3::new(2.0, 0.0, 1.0),
-        &Vec3::new(0.0, 0.0, 0.0),
-        &Vec3::new(0.0, 1.0, 0.0),
-    );
-
-    let model = nalgebra_glm::identity();
-
-    let mvp = Mvp::new(model, view, projection);
-
-    let (pipeline, descriptor) = Pipeline::builder()
+    let pipeline = Pipeline::builder()
         .image(&image)
         .render_pass(&render_pass)
         .logical_device(&device)
         .shaders(&[fragment_shader, vertex_shader])
         .width(win_size.width)
         .height(win_size.height)
-        .mvp(mvp)
+        .stage(&mut stage)
         .build(&instance, physical_device)
         .unwrap();
 
@@ -102,9 +92,9 @@ fn main() {
 
     triangle.triangle(
         Vec3::new(
-            Vec4::new(0.0, -1.0, 0.0, 1.0),
-            Vec4::new(1.0, 1.0, 0.0, 1.0),
-            Vec4::new(-1.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 0.0, 1.0),
+            Vec4::new(100.0, 300.0, 0.0, 1.0),
+            Vec4::new(0.0, 300.0, 0.0, 1.0),
         ),
         Vec3::new(
             Vec4::new(1.0, 0.0, 0.0, 1.0),
@@ -118,12 +108,16 @@ fn main() {
     let mut render_target = match window_handle.as_raw() {
         winit::raw_window_handle::RawWindowHandle::Win32(handle) => RenderTargetBuilder::new()
             .instance(instance)
+            .renderpass(render_pass)
+            .pipeline(pipeline[0])
             .command_buffer(command_buffer)
             .logical_device(device)
             .physical_device(physical_device)
+            .frame_buffer(frame_buffer)
+            .stage(stage)
             .image(Some(image))
             .queue(queue)
-            .build_hwnd(isize::from(handle.hwnd), 0, win_size.width, win_size.height)
+            .build_hwnd(isize::from(handle.hwnd), 0, win_size.width, win_size.height,vec![fragment_shader,vertex_shader])
             .unwrap(),
         _ => todo!(),
     };

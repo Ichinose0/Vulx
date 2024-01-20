@@ -94,32 +94,50 @@ impl RenderTargetBuilder {
         hinstance: isize,
         width: u32,
         height: u32,
-    ) -> Result<HwndRenderTarget, ()> {
+        shaders: Vec<crate::Shader>,
+    ) -> VlResult<HwndRenderTarget> {
         use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
         use libc::c_void;
 
-        use crate::{geometry::Mvp, ShaderKind, Spirv, SubPass, Vec3};
+        use crate::VlError;
 
         let buffer = match self.buffer {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("command_buffer")),
         };
         let physical_device = match self.physical_device {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("physical_device")),
         };
         let device = match self.device {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("logical_device")),
         };
         let instance = match self.instance {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("instance")),
         };
         let queue = match self.queue {
             Some(b) => b,
-            None => return Err(()),
+            None => return Err(VlError::MissingParameter("queue")),
         };
+        let frame_buffer = match self.frame_buffer {
+            Some(b) => b,
+            None => return Err(VlError::MissingParameter("frame_buffer")),
+        };
+        let render_pass = match self.renderpass {
+            Some(b) => b,
+            None => return Err(VlError::MissingParameter("render_pass")),
+        };
+        let pipeline = match self.pipeline {
+            Some(b) => b,
+            None => return Err(VlError::MissingParameter("pipeline")),
+        };
+        let stage = match self.stage {
+            Some(b) => b,
+            None => return Err(VlError::MissingParameter("stage")),
+        };
+
         let surface = surface::Surface::create_for_win32(
             &instance,
             hwnd as *const c_void,
@@ -128,9 +146,6 @@ impl RenderTargetBuilder {
         let swapchain = device
             .create_swapchain(&instance, physical_device, &surface)
             .unwrap();
-        let subpasses = vec![SubPass::new()];
-
-        let render_pass = RenderPass::new(&device, &subpasses);
 
         let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
             Ok(i) => i,
@@ -146,41 +161,6 @@ impl RenderTargetBuilder {
                     .unwrap(),
             );
         }
-
-        let fragment_shader = device
-            .create_shader_module(Spirv::fragment_default(), ShaderKind::Fragment)
-            .unwrap();
-        let vertex_shader = device
-            .create_shader_module(Spirv::vertex_default(), ShaderKind::Vertex)
-            .unwrap();
-
-        let projection = nalgebra_glm::perspective(
-            width as f32 / height as f32,
-            45.0 * (180.0 / std::f32::consts::PI),
-            0.1,
-            100.0,
-        );
-
-        let view = nalgebra_glm::look_at(
-            &Vec3::new(2.0, 0.0, 1.0),
-            &Vec3::new(0.0, 0.0, 0.0),
-            &Vec3::new(0.0, 1.0, 0.0),
-        );
-
-        let model = nalgebra_glm::identity();
-
-        let mvp = Mvp::new(model, view, projection);
-
-        let (pipeline, descriptor) = Pipeline::builder()
-            .image(&self.image.unwrap())
-            .logical_device(&device)
-            .shaders(&[fragment_shader, vertex_shader])
-            .width(width)
-            .height(height)
-            .mvp(mvp)
-            .render_pass(&render_pass)
-            .build(&instance, physical_device)
-            .unwrap();
 
         let create_info = FenceCreateInfo::builder()
             .flags(FenceCreateFlags::SIGNALED)
@@ -201,7 +181,7 @@ impl RenderTargetBuilder {
             image_view,
             images,
             render_pass,
-            pipeline,
+            pipeline: vec![pipeline],
             image: self.image,
             surface,
             swapchain,
@@ -213,12 +193,9 @@ impl RenderTargetBuilder {
             swapchain_semaphore,
             rendered_semaphore,
 
-            width,
-            height,
+            stage,
 
-            fragment_shader,
-            vertex_shader,
-            descriptor,
+            shaders,
         })
     }
 
