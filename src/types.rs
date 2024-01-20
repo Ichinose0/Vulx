@@ -99,6 +99,7 @@ pub trait RenderTarget {
     fn set_image(&mut self, image: Image);
 
     fn logical_device(&self) -> &LogicalDevice;
+    fn instance(&self) -> &Instance;
 }
 
 pub trait IntoPath {
@@ -108,4 +109,9 @@ pub trait IntoPath {
         phsyical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path;
+}
+
+pub trait Destroy {
+    fn destroy_with_instance(&self, instance: &Instance);
+    fn destroy_with_device(&self, device: &LogicalDevice);
 }

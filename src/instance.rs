@@ -1,6 +1,6 @@
 use std::ffi::{c_char, CStr};
 
-use crate::{LogicalDevice, PhysicalDevice, QueueProperties};
+use crate::{HardwareError, LogicalDevice, PhysicalDevice, QueueProperties, VlError, VlResult, Destroy};
 use ash::{
     vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
     Entry,
@@ -27,7 +27,7 @@ impl<'a> InstanceBuilder<'a> {
         self
     }
 
-    pub fn build(self) -> Instance {
+    pub fn build(self) -> VlResult<Instance> {
         let mut exts = vec![];
         for i in self.targets {
             match i {
@@ -45,11 +45,16 @@ impl<'a> InstanceBuilder<'a> {
         let create_info = InstanceCreateInfo::builder()
             .enabled_extension_names(&exts)
             .build();
-        let inner = unsafe { self.entry.create_instance(&create_info, None).unwrap() };
-        Instance {
+
+        let inner = match unsafe { self.entry.create_instance(&create_info, None) } {
+            Ok(x) => x,
+            Err(e) => return Err(VlError::from(e)),
+        };
+
+        Ok(Instance {
             inner,
             entry: self.entry,
-        }
+        })
     }
 }
 
@@ -84,10 +89,14 @@ impl Instance {
         devices
     }
 
-    pub fn default_physical_device(&self, queue_family_index: &mut usize) -> PhysicalDevice {
+    pub fn default_physical_device(
+        &self,
+        queue_family_index: &mut usize,
+    ) -> VlResult<PhysicalDevice> {
         let devices = self.enumerate_physical_device();
         let mut index = 0;
         let mut found_suitable_device = false;
+
         for (_, i) in devices.iter().enumerate() {
             let props = self.get_queue_properties(*i);
             for (n, i) in props.iter().enumerate() {
@@ -102,10 +111,12 @@ impl Instance {
                 }
             }
         }
+
         if !found_suitable_device {
-            panic!("No suitable physical device found");
+            return Err(VlError::HardwareError(HardwareError::NoSuitableDevice));
         }
-        devices[index]
+
+        Ok(devices[index])
     }
 
     pub fn get_queue_properties(&self, device: PhysicalDevice) -> Vec<QueueProperties> {
@@ -135,6 +146,13 @@ impl Instance {
             .build();
         let inner = unsafe { self.inner.create_device(device.0, &create_info, None) }.unwrap();
         LogicalDevice { inner }
+    }
+
+    pub fn destroy<D>(&self,object: &D) 
+    where
+        D: Destroy
+    {
+        object.destroy_with_instance(&self);
     }
 }
 

@@ -21,7 +21,26 @@ pub use queue::*;
 pub use renderpass::*;
 pub use shader::*;
 pub use stage::*;
+use thiserror::Error;
 pub use types::*;
+
+pub type VlResult<T> = std::result::Result<T, VlError>;
+
+#[derive(Debug, Error)]
+pub enum VlError {
+    #[error("Parameter: `{0}` not found.")]
+    MissingParameter(&'static str),
+    #[error("`{0}`")]
+    VkException(#[from] ash::vk::Result),
+    #[error("`{0}`")]
+    HardwareError(#[from] HardwareError),
+}
+
+#[derive(Debug, Error)]
+pub enum HardwareError {
+    #[error("No suitable device found.")]
+    NoSuitableDevice,
+}
 
 #[cfg(test)]
 mod tests {

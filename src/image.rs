@@ -7,7 +7,7 @@ use ash::vk::{
     Rect2D, SampleCountFlags, SharingMode, Viewport,
 };
 
-use crate::{Instance, LogicalDevice, PhysicalDevice, RenderPass};
+use crate::{Instance, LogicalDevice, PhysicalDevice, RenderPass, Destroy};
 
 #[allow(non_camel_case_types)]
 pub enum ImageType {
@@ -104,19 +104,9 @@ impl ImageBuilder {
             memory = device.inner.allocate_memory(&create_info, None).unwrap();
             device.inner.bind_image_memory(inner, memory, 0).unwrap();
         }
-
-        let viewport = Viewport::builder()
-            .width(self.width as f32)
-            .height(self.height as f32)
-            .min_depth(0.0)
-            .max_depth(1.0)
-            .x(0.0)
-            .y(0.0)
-            .build();
-
+        
         Image {
             inner,
-            viewport,
             memory,
             mem_size: mem_req.size,
         }
@@ -136,7 +126,6 @@ impl Default for ImageBuilder {
 #[derive(Clone, Copy)]
 pub struct Image {
     pub inner: ash::vk::Image,
-    pub(crate) viewport: Viewport,
     pub(crate) memory: DeviceMemory,
     pub(crate) mem_size: u64,
 }
@@ -187,6 +176,19 @@ impl Image {
     }
 }
 
+impl Destroy for Image {
+    fn destroy_with_instance(&self, instance: &Instance) {
+        
+    }
+
+    fn destroy_with_device(&self, device: &LogicalDevice) {
+        unsafe {
+            device.inner.destroy_image(self.inner,None);
+            device.inner.free_memory(self.memory, None);
+        }
+    }
+}
+
 pub struct ImageView {
     pub(crate) inner: ash::vk::ImageView,
 }
@@ -211,6 +213,18 @@ impl ImageView {
             Err(_) => return Err(()),
         };
         Ok(FrameBuffer { inner })
+    }
+}
+
+impl Destroy for ImageView {
+    fn destroy_with_instance(&self, instance: &Instance) {
+        
+    }
+
+    fn destroy_with_device(&self, device: &LogicalDevice) {
+        unsafe {
+            device.inner.destroy_image_view(self.inner, None);
+        }
     }
 }
 

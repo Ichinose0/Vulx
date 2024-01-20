@@ -4,36 +4,26 @@ Launching Vulkan Application:
 - Executable: C:\Vulx\target\debug\examples\png.exe
 - Working Directory: C:\Vulx
 - Log file: C:\Vulx\png.txt
-UNASSIGNED-CreateInstance-status-message(INFO / SPEC): msgNum: -2016116905 - Validation Information: [ UNASSIGNED-CreateInstance-status-message ] Object 0: handle = 0x1cc9f733440, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x87d47f57 | vkCreateInstance():  Khronos Validation Layer Active:
+UNASSIGNED-CreateInstance-status-message(INFO / SPEC): msgNum: -2016116905 - Validation Information: [ UNASSIGNED-CreateInstance-status-message ] Object 0: handle = 0x23899b53430, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x87d47f57 | vkCreateInstance():  Khronos Validation Layer Active:
     Settings File: Found at C:\Users\LatteSyobon\AppData\Local\LunarG\vkconfig\override\vk_layer_settings.txt specified by VkConfig application override.
     Current Enables: None.
     Current Disables: None.
 
     Objects: 1
-        [0] 0x1cc9f733440, type: 1, name: NULL
----- Queue 1 ----
-Graphic support: true
-Compute support: true
-Transfer support: true
-VUID-vkCreateDevice-ppEnabledExtensionNames-01387(ERROR / SPEC): msgNum: 307460652 - Validation Error: [ VUID-vkCreateDevice-ppEnabledExtensionNames-01387 ] Object 0: handle = 0x1cc9f733440, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x12537a2c | vkCreateDevice(): pCreateInfo->ppEnabledExtensionNames[0] Missing extension required by the device extension VK_KHR_swapchain: VK_KHR_surface. The Vulkan spec states: All required device extensions for each extension in the VkDeviceCreateInfo::ppEnabledExtensionNames list must also be present in that list (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkCreateDevice-ppEnabledExtensionNames-01387)
+        [0] 0x23899b53430, type: 1, name: NULL
+VUID-vkCreateDevice-ppEnabledExtensionNames-01387(ERROR / SPEC): msgNum: 307460652 - Validation Error: [ VUID-vkCreateDevice-ppEnabledExtensionNames-01387 ] Object 0: handle = 0x23899b53430, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x12537a2c | vkCreateDevice(): pCreateInfo->ppEnabledExtensionNames[0] Missing extension required by the device extension VK_KHR_swapchain: VK_KHR_surface. The Vulkan spec states: All required device extensions for each extension in the VkDeviceCreateInfo::ppEnabledExtensionNames list must also be present in that list (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkCreateDevice-ppEnabledExtensionNames-01387)
     Objects: 1
-        [0] 0x1cc9f733440, type: 1, name: NULL
-UNASSIGNED-cache-file-error(INFO / SPEC): msgNum: -256165483 - Validation Information: [ UNASSIGNED-cache-file-error ] | MessageID = 0xf0bb3995 | vkCreateDevice():  Cannot open shader validation cache at C:\Users\LATTES~1\AppData\Local\Temp/shader_validation_cache.bin for reading (it may not exist yet)
-    Objects: 0
-allocated memory
-Create descriptor set
-Created descriptor sets
-VUID-VkWriteDescriptorSet-dstBinding-00316(ERROR / SPEC): msgNum: -846064959 - Validation Error: [ VUID-VkWriteDescriptorSet-dstBinding-00316 ] Object 0: handle = 0xead9370000000008, type = VK_OBJECT_TYPE_DESCRIPTOR_SET; Object 1: handle = 0xf443490000000006, type = VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT; | MessageID = 0xcd9212c1 | vkUpdateDescriptorSets(): pDescriptorWrites[0].dstBinding (0) has VkDescriptorSetLayoutBinding::descriptorCount of zero in VkDescriptorSetLayout 0xf443490000000006[]. The Vulkan spec states: dstBinding must be a binding with a non-zero descriptorCount (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkWriteDescriptorSet-dstBinding-00316)
-    Objects: 2
-        [0] 0xead9370000000008, type: 23, name: NULL
-        [1] 0xf443490000000006, type: 20, name: NULL
-VUID-VkWriteDescriptorSet-dstArrayElement-00321(ERROR / SPEC): msgNum: -1862672269 - Validation Error: [ VUID-VkWriteDescriptorSet-dstArrayElement-00321 ] Object 0: handle = 0xead9370000000008, type = VK_OBJECT_TYPE_DESCRIPTOR_SET; | MessageID = 0x90f9e073 | vkUpdateDescriptorSets(): pDescriptorWrites[0].dstBinding  descriptor set VkDescriptorSet 0xead9370000000008[] binding #0 with #1 descriptors being updated but this update oversteps the bounds of this binding and the next binding is not consistent with current binding (update past the end of the descriptor set) so this update is invalid. The Vulkan spec states: The sum of dstArrayElement and descriptorCount must be less than or equal to the number of array elements in the descriptor set binding specified by dstBinding, and all applicable consecutive bindings, as described by consecutive binding updates (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkWriteDescriptorSet-dstArrayElement-00321)
+        [0] 0x23899b53430, type: 1, name: NULL
+VUID-vkDestroyImage-image-parameter(ERROR / SPEC): msgNum: 415590263 - Validation Error: [ VUID-vkDestroyImage-image-parameter ] Object 0: handle = 0x23899b53430, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x18c56777 | vkDestroyImage(): image Invalid VkImage Object 0xfd5b260000000001. The Vulkan spec states: If image is not VK_NULL_HANDLE, image must be a valid VkImage handle (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-vkDestroyImage-image-parameter)
     Objects: 1
-        [0] 0xead9370000000008, type: 23, name: NULL
-Update
-Created framebuffer
-VUID-VkGraphicsPipelineCreateInfo-layout-07988(ERROR / SPEC): msgNum: 559874765 - Validation Error: [ VUID-VkGraphicsPipelineCreateInfo-layout-07988 ] Object 0: handle = 0xe88693000000000c, type = VK_OBJECT_TYPE_SHADER_MODULE; Object 1: handle = 0xcad092000000000d, type = VK_OBJECT_TYPE_PIPELINE_LAYOUT; | MessageID = 0x215f02cd | vkCreateGraphicsPipelines(): pCreateInfos[0].pStages[0] SPIR-V (VK_SHADER_STAGE_VERTEX_BIT) uses descriptor slot [Set 0 Binding 0] (type `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER or VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC or VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK`) but was not declared in the pipeline layout. The Vulkan spec states: If a resource variables is declared in a shader, a descriptor slot in layout must match the shader stage (https://vulkan.lunarg.com/doc/view/1.3.268.0/windows/1.3-extensions/vkspec.html#VUID-VkGraphicsPipelineCreateInfo-layout-07988)
-    Objects: 2
-        [0] 0xe88693000000000c, type: 15, name: NULL
-        [1] 0xcad092000000000d, type: 17, name: NULL
+        [0] 0x23899b53430, type: 1, name: NULL
+UNASSIGNED-Threading-Info(ERROR / SPEC): msgNum: 1567320034 - Validation Error: [ UNASSIGNED-Threading-Info ] Object 0: handle = 0xfd5b260000000001, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0x5d6b67e2 | Couldn't find VkImage Object 0xfd5b260000000001. This should not happen and may indicate a bug in the application.
+    Objects: 1
+        [0] 0xfd5b260000000001, type: 10, name: NULL
+UNASSIGNED-Threading-Info(ERROR / SPEC): msgNum: 1567320034 - Validation Error: [ UNASSIGNED-Threading-Info ] Object 0: handle = 0xfd5b260000000001, type = VK_OBJECT_TYPE_IMAGE; | MessageID = 0x5d6b67e2 | Couldn't find VkImage Object 0xfd5b260000000001. This should not happen and may indicate a bug in the application.
+    Objects: 1
+        [0] 0xfd5b260000000001, type: 10, name: NULL
+UNASSIGNED-ObjectTracker-ObjectLeak(ERROR / SPEC): msgNum: 699204130 - Validation Error: [ UNASSIGNED-ObjectTracker-ObjectLeak ] Object 0: handle = 0x23899b53430, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x29ad0222 | vkDestroyInstance():  OBJ ERROR : VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT object VkDevice 0x2389cb07440[] has not been destroyed.
+    Objects: 1
+        [0] 0x23899b53430, type: 1, name: NULL
 Process terminated
