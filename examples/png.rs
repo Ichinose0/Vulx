@@ -89,6 +89,19 @@ fn main() {
         ),
     );
 
+    triangle.triangle(
+        Vec3::new(
+            Vec4::new(300.0, 80.0, 0.0, 1.0),
+            Vec4::new(600.0, 300.0, 0.0, 1.0),
+            Vec4::new(200.0, 300.0, 0.0, 1.0),
+        ),
+        Vec3::new(
+            Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(0.0, 1.0, 0.0, 1.0),
+            Vec4::new(0.0, 0.0, 1.0, 1.0),
+        ),
+    );
+
     let mut render_target = RenderTargetBuilder::new()
         .instance(instance)
         .command_buffer(command_buffer)

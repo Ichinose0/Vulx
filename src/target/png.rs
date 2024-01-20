@@ -75,9 +75,7 @@ impl RenderTarget for PngRenderTarget {
         if self.paths.is_empty() {
             let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
-            self.vertex += path.size as u32;
             self.paths.push(path);
-            self.offsets.push(0);
         }
     }
 
@@ -90,16 +88,6 @@ impl RenderTarget for PngRenderTarget {
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline.inner,
             );
-            let mut buffers = vec![];
-            for i in &self.paths {
-                buffers.push(i.buffer.buffer);
-            }
-            self.logical_device.inner.cmd_bind_vertex_buffers(
-                self.buffer.cmd_buffers[0],
-                0,
-                &buffers,
-                &self.offsets,
-            );
             self.logical_device.inner.cmd_bind_descriptor_sets(
                 self.buffer.cmd_buffers[0],
                 PipelineBindPoint::GRAPHICS,
@@ -108,13 +96,27 @@ impl RenderTarget for PngRenderTarget {
                 &[self.stage.descriptor.as_ref().unwrap().desc_sets[0]],
                 &[],
             );
-            self.logical_device.inner.cmd_draw(
-                self.buffer.cmd_buffers[0],
-                self.vertex,
-                self.paths.len() as u32,
-                0,
-                0,
-            );
+            for i in &self.paths {
+                self.logical_device.inner.cmd_bind_vertex_buffers(
+                    self.buffer.cmd_buffers[0],
+                    0,
+                    &[i.buffer.buffer],
+                    &[0],
+                );
+                self.logical_device.inner.cmd_bind_vertex_buffers(
+                    self.buffer.cmd_buffers[0],
+                    0,
+                    &[i.buffer.buffer],
+                    &[0],
+                );
+                self.logical_device.inner.cmd_draw(
+                    self.buffer.cmd_buffers[0],
+                    i.size as u32,
+                    1,
+                    0,
+                    0,
+                );
+            }
             self.logical_device
                 .inner
                 .cmd_end_render_pass(self.buffer.cmd_buffers[0]);
