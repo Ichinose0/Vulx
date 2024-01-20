@@ -75,7 +75,6 @@ impl RenderTarget for HwndRenderTarget {
                             }
                         }
                         self.frame_buffers.clear();
-                        println!("Cleared frame buffers");
                         for i in &self.image_view {
                             unsafe {
                                 self.logical_device.inner.destroy_image_view(i.inner, None);
@@ -120,8 +119,6 @@ impl RenderTarget for HwndRenderTarget {
                         );
                         let model = identity(1.0);
 
-                        let mvp = Mvp::new(model, view, projection);
-
                         let pipeline = Pipeline::builder()
                             .image(&Image::from(self.images[0]))
                             .logical_device(&self.logical_device)
@@ -129,6 +126,7 @@ impl RenderTarget for HwndRenderTarget {
                             .width(capabilities.current_extent.width)
                             .height(capabilities.current_extent.height)
                             .stage(&mut self.stage)
+                            .render_pass(&self.render_pass)
                             .build(&self.instance, self.physical_device)
                             .unwrap();
 
@@ -174,14 +172,12 @@ impl RenderTarget for HwndRenderTarget {
                             }
                         }
                         self.frame_buffers.clear();
-                        println!("Cleared frame buffers");
                         for i in &self.image_view {
                             unsafe {
                                 self.logical_device.inner.destroy_image_view(i.inner, None);
                             }
                         }
                         self.image_view.clear();
-                        println!("Cleared image view");
                         for i in &self.images {
                             unsafe {
                                 self.logical_device.inner.destroy_image(*i, None);
