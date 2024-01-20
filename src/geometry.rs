@@ -39,7 +39,7 @@ impl Line {
 pub enum BufferUsage {
     Vertex,
     Uniform,
-    Index
+    Index,
 }
 
 pub(crate) struct Buffer {
@@ -149,21 +149,20 @@ impl Destroy for Buffer {
 }
 
 pub struct Path {
-    pub(crate) buffer: Buffer,
-    pub(crate) index_buffer: Option<Vec<(Buffer,Buffer)>>,
-    pub(crate) size: usize,
+    pub(crate) buffers: Vec<(Buffer,usize)>,
+    pub(crate) index_buffers: Vec<(Buffer,usize)>,
 }
 
 impl Destroy for Path {
     fn destroy_with_instance(&self, instance: &Instance) {}
 
     fn destroy_with_device(&self, device: &LogicalDevice) {
-        unsafe {
-            device.inner.destroy_buffer(self.buffer.buffer, None);
-            if let Some(x) = self.buffer.memory {
-                device.inner.free_memory(x, None);
-            }
-        }
+        // unsafe {
+        //     device.inner.destroy_buffer(self.buffer.buffer, None);
+        //     if let Some(x) = self.buffer.memory {
+        //         device.inner.free_memory(x, None);
+        //     }
+        // }
     }
 }
 
@@ -175,7 +174,7 @@ pub(crate) struct VertexData {
 
 pub(crate) struct IndexBuffer {
     pub(crate) data: Vec<VertexData>,
-    pub(crate) indices: Vec<u32>
+    pub(crate) indices: Vec<u32>,
 }
 
 pub struct Mvp {
@@ -203,55 +202,76 @@ impl Default for Mvp {
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 #[derive(Default)]
 pub struct PathGeometry {
-    vertices: Vec<VertexData>,
-    index_buffer: Vec<IndexBuffer>
+    index_buffer: Vec<IndexBuffer>,
 }
 
 impl PathGeometry {
     pub fn new() -> Self {
-        Self { vertices: vec![], index_buffer: vec![] }
+        Self {
+            index_buffer: vec![],
+        }
     }
 
     pub fn triangle(&mut self, vert: Vec3<Vec4<f32>>, color: Vec3<Vec4<f32>>) {
-        for i in 0..3 {
-            self.vertices.push(VertexData {
-                pos: vert[i],
-                color: color[i],
-            })
-        }
+        let index_buffer = IndexBuffer {
+            data: vec![
+                VertexData {
+                    pos: vert[0],
+                    color: color[0],
+                },
+                VertexData {
+                    pos: vert[1],
+                    color: color[1],
+                },
+                VertexData {
+                    pos: vert[2],
+                    color: color[2],
+                },
+            ],
+            indices: vec![0, 1, 2],
+        };
+        self.index_buffer.push(index_buffer);
     }
 
     pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>, color: Vec4<Vec4<f32>>) {
         let index_buffer = IndexBuffer {
             data: vec![
-                VertexData { 
-                    pos: vert[0], color: color[0] 
+                VertexData {
+                    pos: vert[0],
+                    color: color[0],
                 },
-                VertexData { 
-                    pos: vert[1], color: color[1] 
+                VertexData {
+                    pos: vert[1],
+                    color: color[1],
                 },
-                VertexData { 
-                    pos: vert[2], color: color[2] 
+                VertexData {
+                    pos: vert[2],
+                    color: color[2],
                 },
-                VertexData { 
-                    pos: vert[3], color: color[3] 
+                VertexData {
+                    pos: vert[3],
+                    color: color[3],
                 },
             ],
-            indices: vec![0, 1, 2, 1, 0, 3],
+            indices: vec![0, 1, 3, 1, 2, 3],
         };
         self.index_buffer.push(index_buffer);
     }
 
-    pub fn geometries(&mut self, vertices: Vec<Vec4<f32>>, color: Vec<Vec4<f32>>) {
-        for pos in vertices {
-            for color in &color {
-                self.vertices.push(VertexData { pos, color: *color })
-            }
-        }
-    }
+    // pub fn geometries(&mut self, vertices: Vec<Vec4<f32>>, color: Vec<Vec4<f32>>) {
+    //     for pos in vertices {
+    //         for color in &color {
+    //             self.vertices.push(VertexData { pos, color: *color })
+    //         }
+    //     }
+    // }
 
     pub fn size(&self) -> usize {
-        self.vertices.len()
+        let mut size = 0;
+        for i in &self.index_buffer {
+            size += i.data.len();
+        }
+        size
     }
 }
 
@@ -262,40 +282,32 @@ impl IntoPath for PathGeometry {
         physical_device: PhysicalDevice,
         device: &LogicalDevice,
     ) -> Path {
-        let mut buffer = Buffer::new(
-            instance,
-            physical_device,
-            device,
-            std::mem::size_of::<VertexData>() * self.vertices.len(),
-            BufferUsage::Vertex,
-        );
-        buffer.allocate_data(self.vertices.as_ptr() as *const c_void, device);
-        let mut index_buffer = None;
-        if !self.index_buffer.is_empty() {
-            let mut ib = vec![];
-            for i in &self.index_buffer {
-                let mut buffer = Buffer::new(
-                    instance,
-                    physical_device,
-                    device,
-                    std::mem::size_of::<VertexData>() * i.data.len(),
-                    BufferUsage::Vertex,
-                );
-                buffer.allocate_data(i.data.as_ptr() as *const c_void, device);
-                let mut index_buffer = Buffer::new(instance, physical_device, device, std::mem::size_of::<u32>()*i.indices.len(), BufferUsage::Index);
-                index_buffer.allocate_data(i.indices.as_ptr() as *const c_void, device);
-
-                ib.push((buffer,index_buffer));
-            }
-
-
-            index_buffer = Some(ib);
+        let mut index_buffers = vec![];
+        let mut buffers = vec![];
+        for i in &self.index_buffer {
+            let mut buffer = Buffer::new(
+                instance,
+                physical_device,
+                device,
+                std::mem::size_of::<VertexData>() * i.data.len(),
+                BufferUsage::Vertex,
+            );
+            buffer.allocate_data(i.data.as_ptr() as *const c_void, device);
+            let mut index_buffer = Buffer::new(
+                instance,
+                physical_device,
+                device,
+                std::mem::size_of::<u32>() * i.indices.len(),
+                BufferUsage::Index,
+            );
+            index_buffer.allocate_data(i.indices.as_ptr() as *const c_void, device);
+            buffers.push((buffer,i.data.len()));
+            index_buffers.push((index_buffer,i.indices.len()));
         }
-        
+
         Path {
-            buffer,
-            size: self.size(),
-            index_buffer,
+            buffers,
+            index_buffers,
         }
     }
 }

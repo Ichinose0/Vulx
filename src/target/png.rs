@@ -1,8 +1,8 @@
 use std::{fs::File, io::BufWriter};
 
 use ash::vk::{
-    ClearValue, Extent2D, Fence, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo,
-    SubpassContents,
+    ClearValue, Extent2D, Fence, IndexType, Offset2D, PipelineBindPoint, Rect2D,
+    RenderPassBeginInfo, SubpassContents,
 };
 
 use super::CommandBuffer;
@@ -43,9 +43,9 @@ impl RenderTarget for PngRenderTarget {
         self.buffer.begin(&self.logical_device);
         unsafe {
             let mut clear = ClearValue::default();
-            clear.color.float32[0] = 1.0;
-            clear.color.float32[1] = 1.0;
-            clear.color.float32[2] = 1.0;
+            clear.color.float32[0] = 0.0;
+            clear.color.float32[1] = 0.0;
+            clear.color.float32[2] = 0.0;
             clear.color.float32[3] = 1.0;
             let create_info = RenderPassBeginInfo::builder()
                 .render_pass(self.render_pass.inner)
@@ -96,26 +96,31 @@ impl RenderTarget for PngRenderTarget {
                 &[self.stage.descriptor.as_ref().unwrap().desc_sets[0]],
                 &[],
             );
-            for i in &self.paths {
-                self.logical_device.inner.cmd_bind_vertex_buffers(
-                    self.buffer.cmd_buffers[0],
-                    0,
-                    &[i.buffer.buffer],
-                    &[0],
-                );
-                self.logical_device.inner.cmd_bind_vertex_buffers(
-                    self.buffer.cmd_buffers[0],
-                    0,
-                    &[i.buffer.buffer],
-                    &[0],
-                );
-                self.logical_device.inner.cmd_draw(
-                    self.buffer.cmd_buffers[0],
-                    i.size as u32,
-                    1,
-                    0,
-                    0,
-                );
+            for path in &self.paths {
+                for (n, i) in path.buffers.iter().enumerate() {
+                    let (buffer,buffer_size) = i;
+                    self.logical_device.inner.cmd_bind_vertex_buffers(
+                        self.buffer.cmd_buffers[0],
+                        0,
+                        &[buffer.buffer],
+                        &[0],
+                    );
+                    let (index_buffer,index_size) = &path.index_buffers[n];
+                    self.logical_device.inner.cmd_bind_index_buffer(
+                        self.buffer.cmd_buffers[0],
+                        index_buffer.buffer,
+                        0,
+                        IndexType::UINT32,
+                    );
+                    self.logical_device.inner.cmd_draw_indexed(
+                        self.buffer.cmd_buffers[0],
+                        *index_size as u32,
+                        1,
+                        0,
+                        0,
+                        0,
+                    );
+                }
             }
             self.logical_device
                 .inner
