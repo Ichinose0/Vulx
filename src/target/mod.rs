@@ -1,6 +1,6 @@
-// #[cfg(target_os = "windows")]
-// #[cfg(feature = "window")]
-// mod hwnd;
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+mod hwnd;
 mod png;
 pub(crate) mod surface;
 #[cfg(feature = "window")]
@@ -9,9 +9,9 @@ use ash::vk::{
     CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, PipelineStageFlags, Semaphore,
     SubmitInfo,
 };
-// #[cfg(target_os = "windows")]
-// #[cfg(feature = "window")]
-// pub use hwnd::*;
+#[cfg(target_os = "windows")]
+#[cfg(feature = "window")]
+pub use hwnd::*;
 pub use png::*;
 
 use crate::{
@@ -87,140 +87,144 @@ impl RenderTargetBuilder {
         self
     }
 
-    // #[cfg(target_os = "windows")]
-    // #[cfg(feature = "window")]
-    // pub fn build_hwnd(self, hwnd: isize, hinstance: isize) -> Result<HwndRenderTarget, ()> {
-    //     use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
-    //     use libc::c_void;
+    #[cfg(target_os = "windows")]
+    #[cfg(feature = "window")]
+    pub fn build_hwnd(
+        self,
+        hwnd: isize,
+        hinstance: isize,
+        width: u32,
+        height: u32,
+    ) -> Result<HwndRenderTarget, ()> {
+        use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
+        use libc::c_void;
 
-    //     use crate::{
-    //         geometry::Mvp, identity, look_at, perspective, radians, ShaderKind, Spirv, SubPass,
-    //         Vec3,
-    //     };
+        use crate::{
+            geometry::Mvp, identity, look_at, perspective, radians, ShaderKind, Spirv, SubPass,
+            Vec3,
+        };
 
-    //     let buffer = match self.buffer {
-    //         Some(b) => b,
-    //         None => return Err(()),
-    //     };
-    //     let physical_device = match self.physical_device {
-    //         Some(b) => b,
-    //         None => return Err(()),
-    //     };
-    //     let device = match self.device {
-    //         Some(b) => b,
-    //         None => return Err(()),
-    //     };
-    //     let instance = match self.instance {
-    //         Some(b) => b,
-    //         None => return Err(()),
-    //     };
-    //     let queue = match self.queue {
-    //         Some(b) => b,
-    //         None => return Err(()),
-    //     };
-    //     let surface = surface::Surface::create_for_win32(
-    //         &instance,
-    //         hwnd as *const c_void,
-    //         hinstance as *const c_void,
-    //     );
-    //     let swapchain = device
-    //         .create_swapchain(&instance, physical_device, &surface)
-    //         .unwrap();
-    //     let subpasses = vec![SubPass::new()];
+        let buffer = match self.buffer {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let physical_device = match self.physical_device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let device = match self.device {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let instance = match self.instance {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let queue = match self.queue {
+            Some(b) => b,
+            None => return Err(()),
+        };
+        let surface = surface::Surface::create_for_win32(
+            &instance,
+            hwnd as *const c_void,
+            hinstance as *const c_void,
+        );
+        let swapchain = device
+            .create_swapchain(&instance, physical_device, &surface)
+            .unwrap();
+        let subpasses = vec![SubPass::new()];
 
-    //     let render_pass = RenderPass::new(&device, &subpasses);
+        let render_pass = RenderPass::new(&device, &subpasses);
 
-    //     let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
-    //         Ok(i) => i,
-    //         Err(_) => panic!("Err"),
-    //     };
+        let images = match unsafe { swapchain.inner.get_swapchain_images(swapchain.khr) } {
+            Ok(i) => i,
+            Err(_) => panic!("Err"),
+        };
 
-    //     let mut frame_buffers = vec![];
-    //     let image_view = swapchain.get_image(&device, &images).unwrap();
+        let mut frame_buffers = vec![];
+        let image_view = swapchain.get_image(&device, &images).unwrap();
 
-    //     for i in &image_view {
-    //         frame_buffers.push(
-    //             i.create_frame_buffer(
-    //                 &device,
-    //                 &render_pass,
-    //                 self.image.as_ref().unwrap().viewport.width as u32,
-    //                 self.image.as_ref().unwrap().viewport.height as u32,
-    //             )
-    //             .unwrap(),
-    //         );
-    //     }
+        for i in &image_view {
+            frame_buffers.push(
+                i.create_frame_buffer(&device, &render_pass, width, height)
+                    .unwrap(),
+            );
+        }
 
-    //     let fragment_shader = device
-    //         .create_shader_module(
-    //             Spirv::new("examples/shader/shader.frag.spv"),
-    //             ShaderKind::Fragment,
-    //         )
-    //         .unwrap();
-    //     let vertex_shader = device
-    //         .create_shader_module(
-    //             Spirv::new("examples/shader/shader.vert.spv"),
-    //             ShaderKind::Vertex,
-    //         )
-    //         .unwrap();
+        let fragment_shader = device
+            .create_shader_module(Spirv::fragment_default(), ShaderKind::Fragment)
+            .unwrap();
+        let vertex_shader = device
+            .create_shader_module(Spirv::vertex_default(), ShaderKind::Vertex)
+            .unwrap();
 
-    //     let projection = perspective(radians(45.0), 640.0 / 800.0, 0.1, 100.0);
-    //     let view = look_at(
-    //         Vec3::new(4.0, 3.0, 3.0),
-    //         Vec3::new(0.0, 0.0, 0.0),
-    //         Vec3::new(0.0, 1.0, 0.0),
-    //     );
-    //     let model = identity(1.0);
+        let projection = nalgebra_glm::perspective(
+            width as f32 / height as f32,
+            45.0 * (180.0 / std::f32::consts::PI),
+            0.1,
+            100.0,
+        );
 
-    //     let mvp = Mvp::new(model, view, projection);
+        let view = nalgebra_glm::look_at(
+            &Vec3::new(2.0, 0.0, 1.0),
+            &Vec3::new(0.0, 0.0, 0.0),
+            &Vec3::new(0.0, 1.0, 0.0),
+        );
 
-    //     let (pipeline,descriptor) = Pipeline::builder()
-    //         .image(&self.image.unwrap())
-    //         .logical_device(&device)
-    //         .shaders(&[fragment_shader, vertex_shader])
-    //         .width(640)
-    //         .height(800)
-    //         .mvp(mvp)
-    //         .build(&instance, physical_device)
-    //         .unwrap();
+        let model = nalgebra_glm::identity();
 
-    //     let create_info = FenceCreateInfo::builder()
-    //         .flags(FenceCreateFlags::SIGNALED)
-    //         .build();
-    //     let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
-    //     let create_info = SemaphoreCreateInfo::builder().build();
-    //     let swapchain_semaphore =
-    //         unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
-    //     let rendered_semaphore =
-    //         unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
-    //     Ok(HwndRenderTarget {
-    //         instance,
-    //         buffer,
-    //         logical_device: device,
-    //         physical_device,
-    //         queue,
-    //         frame_buffers,
-    //         image_view,
-    //         images,
-    //         render_pass,
-    //         pipeline,
-    //         image: self.image,
-    //         surface,
-    //         swapchain,
-    //         fence,
-    //         img_index: 0,
-    //         vertex: 0,
-    //         buffers: vec![],
-    //         offsets: vec![],
-    //         swapchain_semaphore,
-    //         rendered_semaphore,
+        let mvp = Mvp::new(model, view, projection);
 
-    //         width: 800,
-    //         height: 600,
+        let (pipeline, descriptor) = Pipeline::builder()
+            .image(&self.image.unwrap())
+            .logical_device(&device)
+            .shaders(&[fragment_shader, vertex_shader])
+            .width(width)
+            .height(height)
+            .mvp(mvp)
+            .render_pass(&render_pass)
+            .build(&instance, physical_device)
+            .unwrap();
 
-    //         fragment_shader,
-    //         vertex_shader,
-    //     })
-    // }
+        let create_info = FenceCreateInfo::builder()
+            .flags(FenceCreateFlags::SIGNALED)
+            .build();
+        let fence = unsafe { device.inner.create_fence(&create_info, None) }.unwrap();
+        let create_info = SemaphoreCreateInfo::builder().build();
+        let swapchain_semaphore =
+            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
+        let rendered_semaphore =
+            unsafe { device.inner.create_semaphore(&create_info, None) }.unwrap();
+        Ok(HwndRenderTarget {
+            instance,
+            buffer,
+            logical_device: device,
+            physical_device,
+            queue,
+            frame_buffers,
+            image_view,
+            images,
+            render_pass,
+            pipeline,
+            image: self.image,
+            surface,
+            swapchain,
+            fence,
+            img_index: 0,
+            vertex: 0,
+            paths: vec![],
+            offsets: vec![],
+            swapchain_semaphore,
+            rendered_semaphore,
+
+            width,
+            height,
+
+            fragment_shader,
+            vertex_shader,
+            descriptor,
+        })
+    }
 
     pub fn build_png(
         self,

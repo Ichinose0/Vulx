@@ -9,10 +9,10 @@ use ash::vk::{
 use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
-    geometry::{Mvp, PathGeometry},
+    geometry::{Mvp, Path, PathGeometry},
     identity, look_at, perspective, radians, FrameBuffer, Image, ImageView, Instance, IntoPath,
     LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, ShaderKind,
-    Spirv, SubPass, Vec2, Vec3,
+    Spirv, StageDescriptor, SubPass, Vec2, Vec3,
 };
 
 pub struct HwndRenderTarget {
@@ -36,8 +36,10 @@ pub struct HwndRenderTarget {
     pub(crate) img_index: u32,
 
     pub(crate) vertex: u32,
-    pub(crate) buffers: Vec<ash::vk::Buffer>,
+    pub(crate) paths: Vec<Path>,
     pub(crate) offsets: Vec<u64>,
+
+    pub(crate) descriptor: StageDescriptor,
 
     pub(crate) swapchain_semaphore: Semaphore,
     pub(crate) rendered_semaphore: Semaphore,
@@ -128,7 +130,7 @@ impl RenderTarget for HwndRenderTarget {
                         let mvp = Mvp::new(model, view, projection);
 
                         let (pipeline, descriptor) = Pipeline::builder()
-                            .image(&I)
+                            .image(&Image::from(self.images[0]))
                             .logical_device(&self.logical_device)
                             .shaders(&[self.fragment_shader, self.vertex_shader])
                             .width(capabilities.current_extent.width)
@@ -292,12 +294,12 @@ impl RenderTarget for HwndRenderTarget {
         P: IntoPath,
     {
         unsafe {
-            if self.buffers.is_empty() {
+            if self.paths.is_empty() {
                 let path =
                     path.into_path(&self.instance, self.physical_device, &self.logical_device);
 
                 self.vertex += path.size as u32;
-                self.buffers.push(path.buffer.buffer);
+                self.paths.push(path);
                 self.offsets.push(0);
             }
         }
@@ -316,16 +318,28 @@ impl RenderTarget for HwndRenderTarget {
                 PipelineBindPoint::GRAPHICS,
                 self.pipeline[0].inner,
             );
+            let mut buffers = vec![];
+            for i in &self.paths {
+                buffers.push(i.buffer.buffer);
+            }
             self.logical_device.inner.cmd_bind_vertex_buffers(
                 self.buffer.cmd_buffers[0],
                 0,
-                &self.buffers,
+                &buffers,
                 &self.offsets,
+            );
+            self.logical_device.inner.cmd_bind_descriptor_sets(
+                self.buffer.cmd_buffers[0],
+                PipelineBindPoint::GRAPHICS,
+                self.descriptor.pipeline_layout,
+                0,
+                &[self.descriptor.desc_sets[0]],
+                &[],
             );
             self.logical_device.inner.cmd_draw(
                 self.buffer.cmd_buffers[0],
                 self.vertex,
-                self.buffers.len() as u32,
+                self.paths.len() as u32,
                 0,
                 0,
             );
@@ -363,6 +377,10 @@ impl RenderTarget for HwndRenderTarget {
 
     fn logical_device(&self) -> &LogicalDevice {
         &self.logical_device
+    }
+
+    fn instance(&self) -> &Instance {
+        &self.instance
     }
 }
 

@@ -20,8 +20,8 @@ libc = "0.2.152"
 thiserror= "1"
 
 nalgebra = "0.32.3"
+nalgebra-glm = "0.18.0"
 
 num-traits = "0.2.17"
 [dev-dependencies]
 winit = "0.29.10"
-nalgebra-glm = "0.18.0"

@@ -176,6 +176,16 @@ impl Image {
     }
 }
 
+impl From<ash::vk::Image> for Image {
+    fn from(value: ash::vk::Image) -> Self {
+        Self {
+            inner: value,
+            memory: DeviceMemory::null(),
+            mem_size: 0,
+        }
+    }
+}
+
 impl Destroy for Image {
     fn destroy_with_instance(&self, instance: &Instance) {}
 
