@@ -87,6 +87,8 @@ pub trait RenderTarget {
     fn stroke(&mut self, path: &mut impl IntoPath, thickness: f64);
     fn end(&mut self);
 
+    fn clear(&mut self);
+
     fn set_image(&mut self, image: Image);
 
     fn logical_device(&self) -> &LogicalDevice;

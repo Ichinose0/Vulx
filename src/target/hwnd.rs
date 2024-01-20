@@ -338,6 +338,13 @@ impl RenderTarget for HwndRenderTarget {
     fn instance(&self) -> &Instance {
         &self.instance
     }
+
+    fn clear(&mut self) {
+        for i in &self.paths {
+            self.logical_device.destroy(i);
+        }
+        self.paths.clear();
+    }
 }
 
 impl Drop for HwndRenderTarget {

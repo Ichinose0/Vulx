@@ -1,4 +1,4 @@
-use Vulx::{
+use vulx::{
     geometry::{Mvp, PathGeometry},
     target::{CommandBuffer, RenderTargetBuilder},
     Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, RenderPass, RenderTarget,
@@ -104,7 +104,7 @@ fn main() {
         .unwrap();
 
     render_target.begin();
-    render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
+    render_target.fill(&mut triangle);
     render_target.end();
     let device = render_target.logical_device();
 
