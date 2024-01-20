@@ -187,5 +187,6 @@ impl Drop for PngRenderTarget {
         }
         self.logical_device.destroy(&self.image.unwrap());
         self.logical_device.destroy(&self.descriptor);
+        self.instance.destroy(&self.logical_device);
     }
 }

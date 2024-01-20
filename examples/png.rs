@@ -115,7 +115,6 @@ fn main() {
     render_target.fill(&mut triangle, Color::RGBA(1.0, 0.0, 0.0, 1.0), 1.0);
     render_target.end();
     let device = render_target.logical_device();
-    let instance = render_target.instance();
 
     for i in &pipeline {
         device.destroy_pipeline(i);
@@ -123,5 +122,4 @@ fn main() {
     device.destroy(&fragment_shader);
     device.destroy(&vertex_shader);
     device.destroy(&image_view);
-    instance.destroy(device);
 }
