@@ -4,7 +4,7 @@ use ash::vk::{
     ComponentMapping, ComponentSwizzle, DeviceMemory, Extent3D, Format, FramebufferCreateInfo,
     ImageAspectFlags, ImageCreateInfo, ImageLayout, ImageSubresourceRange, ImageTiling,
     ImageUsageFlags, ImageViewCreateInfo, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags,
-    Rect2D, SampleCountFlags, SharingMode, Viewport,
+    SampleCountFlags, SharingMode,
 };
 
 use crate::{Destroy, Instance, LogicalDevice, PhysicalDevice, RenderPass};
@@ -83,11 +83,11 @@ impl ImageBuilder {
         let mut suitable_memory_found = false;
 
         for i in 0..mem_prop.memory_type_count {
-            if ((mem_req.memory_type_bits & (1 << i)) != 0
+            if (mem_req.memory_type_bits & (1 << i)) != 0
                 && (mem_prop.memory_types[i as usize].property_flags
                     & MemoryPropertyFlags::HOST_VISIBLE)
                     .as_raw()
-                    != 0)
+                    != 0
             {
                 create_info = create_info.memory_type_index(i);
                 suitable_memory_found = true;

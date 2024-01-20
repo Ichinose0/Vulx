@@ -6,8 +6,7 @@ pub(crate) mod surface;
 #[cfg(feature = "window")]
 pub(crate) mod swapchain;
 use ash::vk::{
-    CommandBufferBeginInfo, CommandPool, Fence, ImageLayout, PipelineStageFlags, Semaphore,
-    SubmitInfo,
+    CommandBufferBeginInfo, CommandPool, Fence, PipelineStageFlags, Semaphore, SubmitInfo,
 };
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
@@ -16,7 +15,7 @@ pub use png::*;
 
 use crate::{
     FrameBuffer, Image, Instance, LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass,
-    Stage, StageDescriptor, VlResult,
+    Stage, VlResult,
 };
 
 pub struct RenderTargetBuilder {
@@ -99,10 +98,7 @@ impl RenderTargetBuilder {
         use ash::vk::{FenceCreateFlags, FenceCreateInfo, SemaphoreCreateInfo};
         use libc::c_void;
 
-        use crate::{
-            geometry::Mvp, identity, look_at, perspective, radians, ShaderKind, Spirv, SubPass,
-            Vec3,
-        };
+        use crate::{geometry::Mvp, ShaderKind, Spirv, SubPass, Vec3};
 
         let buffer = match self.buffer {
             Some(b) => b,

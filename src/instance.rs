@@ -1,10 +1,8 @@
-use std::ffi::{c_char, CStr};
-
 use crate::{
     Destroy, HardwareError, LogicalDevice, PhysicalDevice, QueueProperties, VlError, VlResult,
 };
 use ash::{
-    vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo, InstanceCreateInfoBuilder},
+    vk::{DeviceCreateInfo, DeviceQueueCreateInfo, InstanceCreateInfo},
     Entry,
 };
 

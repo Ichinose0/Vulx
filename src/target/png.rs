@@ -1,16 +1,15 @@
 use std::{fs::File, io::BufWriter};
 
 use ash::vk::{
-    ClearValue, Extent2D, Fence, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, Offset2D,
-    PipelineBindPoint, Rect2D, RenderPassBeginInfo, SubpassContents,
+    ClearValue, Extent2D, Fence, Offset2D, PipelineBindPoint, Rect2D, RenderPassBeginInfo,
+    SubpassContents,
 };
 
 use super::CommandBuffer;
 
 use crate::{
-    geometry::{Path, PathGeometry},
-    FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice, Pipeline, Queue,
-    RenderPass, RenderTarget, Stage, StageDescriptor, Vec2, Vec3, Vec4,
+    geometry::Path, FrameBuffer, Image, Instance, IntoPath, LogicalDevice, PhysicalDevice,
+    Pipeline, Queue, RenderPass, RenderTarget, Stage,
 };
 
 pub struct PngRenderTarget {

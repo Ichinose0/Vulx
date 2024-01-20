@@ -1,9 +1,6 @@
-use libc::c_void;
-
 use crate::{
-    geometry::{Buffer, BufferUsage, Mvp},
-    identity, Image, Instance, LogicalDevice, PhysicalDevice, RenderPass, Shader, ShaderKind,
-    Spirv, Stage, StageDescriptor, VlError, VlResult,
+    Image, Instance, LogicalDevice, PhysicalDevice, RenderPass, Shader, ShaderKind, Spirv, Stage,
+    VlResult,
 };
 
 pub enum VertexDataLayout {

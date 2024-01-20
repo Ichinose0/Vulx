@@ -1,18 +1,15 @@
-use std::{fs::File, io::BufWriter};
-
 use ash::vk::{
-    ClearValue, CommandBufferResetFlags, Extent2D, Fence, FenceCreateInfo, MemoryAllocateInfo,
-    MemoryMapFlags, MemoryPropertyFlags, Offset2D, PipelineBindPoint, PipelineStageFlags,
-    PresentInfoKHR, Rect2D, RenderPassBeginInfo, Semaphore, SubpassContents,
+    ClearValue, CommandBufferResetFlags, Extent2D, Fence, Offset2D, PipelineBindPoint,
+    PipelineStageFlags, PresentInfoKHR, Rect2D, RenderPassBeginInfo, Semaphore, SubpassContents,
 };
 
 use super::{swapchain::recreate_swapchain, CommandBuffer};
 
 use crate::{
-    geometry::{Mvp, Path, PathGeometry},
+    geometry::{Mvp, Path},
     identity, look_at, perspective, radians, FrameBuffer, Image, ImageView, Instance, IntoPath,
-    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader, ShaderKind,
-    Spirv, StageDescriptor, SubPass, Vec2, Vec3,
+    LogicalDevice, PhysicalDevice, Pipeline, Queue, RenderPass, RenderTarget, Shader,
+    StageDescriptor, SubPass, Vec3,
 };
 
 pub struct HwndRenderTarget {

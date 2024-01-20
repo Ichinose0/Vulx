@@ -31,7 +31,7 @@ impl Swapchain {
         physical_device: PhysicalDevice,
         surface: &Surface,
     ) -> Result<(Self, SurfaceCapabilitiesKHR), ()> {
-        use ash::vk::{SurfaceCapabilitiesKHR, SwapchainCreateInfoKHR};
+        use ash::vk::SwapchainCreateInfoKHR;
 
         let surface_capabilities = match unsafe {
             surface

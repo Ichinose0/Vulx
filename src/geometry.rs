@@ -88,11 +88,11 @@ impl Buffer {
         let mut suitable_memory_found = false;
 
         for i in 0..self.mem_prop.memory_type_count {
-            if ((mem_req.memory_type_bits & (1 << i)) != 0
+            if (mem_req.memory_type_bits & (1 << i)) != 0
                 && (self.mem_prop.memory_types[i as usize].property_flags
                     & MemoryPropertyFlags::HOST_VISIBLE)
                     .as_raw()
-                    != 0)
+                    != 0
             {
                 create_info = create_info.memory_type_index(i);
                 suitable_memory_found = true;
@@ -266,7 +266,7 @@ impl IntoPath for PathGeometry {
             instance,
             physical_device,
             device,
-            (std::mem::size_of::<VertexData>() * self.vertices.len()),
+            std::mem::size_of::<VertexData>() * self.vertices.len(),
             BufferUsage::Vertex,
         );
         buffer.allocate_data(self.vertices.as_ptr() as *const c_void, device);

@@ -16,8 +16,8 @@ use ash::vk::{
 };
 
 use crate::{
-    geometry::{Buffer, Mvp, VertexData},
-    Image, LogicalDevice, Pipeline, Shader, Stage, StageDescriptor, Vec2, VlError, VlResult,
+    geometry::{Mvp, VertexData},
+    LogicalDevice, Pipeline, Shader, Stage, StageDescriptor, VlError, VlResult,
 };
 
 pub struct SubPass(SubpassDescription);

@@ -1,13 +1,8 @@
 //! Type definitions used in Vulx
 
-use std::ops::Index;
-
 use nalgebra::{Matrix4, Vector2, Vector3, Vector4};
 
-use crate::{
-    geometry::{Line, Path, PathGeometry},
-    Image, Instance, LogicalDevice,
-};
+use crate::{geometry::Path, Image, Instance, LogicalDevice};
 
 pub type Vec2<T> = Vector2<T>;
 pub type Vec3<T> = Vector3<T>;

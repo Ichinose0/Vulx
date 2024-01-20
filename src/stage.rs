@@ -3,7 +3,7 @@ use libc::c_void;
 
 use crate::{
     geometry::{Buffer, BufferUsage, Mvp},
-    Destroy, Instance, LogicalDevice, Mat4, PhysicalDevice, Pipeline, VlError, VlResult,
+    Destroy, Instance, LogicalDevice, PhysicalDevice, VlError, VlResult,
 };
 
 pub struct StageBuilder<'a> {

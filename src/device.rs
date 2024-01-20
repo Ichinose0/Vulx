@@ -1,7 +1,7 @@
 use ash::vk::{
     CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandPool,
-    CommandPoolCreateFlags, CommandPoolCreateInfo, DeviceQueueCreateInfo, ImageUsageFlags,
-    ShaderModuleCreateInfo, SharingMode,
+    CommandPoolCreateFlags, CommandPoolCreateInfo, ImageUsageFlags, ShaderModuleCreateInfo,
+    SharingMode,
 };
 
 use crate::{
@@ -77,7 +77,7 @@ impl LogicalDevice {
         physical_device: PhysicalDevice,
         surface: &Surface,
     ) -> VlResult<Swapchain> {
-        use ash::vk::{SurfaceCapabilitiesKHR, SwapchainCreateInfoKHR};
+        use ash::vk::SwapchainCreateInfoKHR;
 
         let surface_capabilities = match unsafe {
             surface
