@@ -2,7 +2,7 @@ use vulx::{
     geometry::PathGeometry,
     target::{CommandBuffer, RenderTargetBuilder},
     Color, ImageBuilder, InstanceBuilder, Pipeline, PipelineBuilder, PolygonMode, RenderPass,
-    RenderTarget, ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4, Rectangle, Shape,
+    RenderTarget, ShaderKind, Spirv, Stage, StageBuilder, SubPass, Vec3, Vec4, Rectangle, Shape, Line,
 };
 
 const WIDTH: u32 = 1280;
@@ -104,10 +104,16 @@ fn main() {
     // );
 
     let rect = Rectangle::new(
-        Vec4::new(2.0,10.0,0.0,1.0),
+        Vec4::new(10.0,10.0,0.0,1.0),
         Vec4::new(100.0,10.0,0.0,1.0),
-        Vec4::new(100.0,100.0,0.0,1.0),
-        Vec4::new(10.0,100.0,0.0,1.0),
+        Vec4::new(100.0,12.0,0.0,1.0),
+        Vec4::new(10.0,12.0,0.0,1.0),
+    );
+
+    let line = Line::new(
+        Vec4::new(10.0,40.0,0.0,1.0),
+        Vec4::new(1000.0,80.0,0.0,1.0),
+        2.0
     );
 
     triangle.rectangle(
@@ -125,7 +131,8 @@ fn main() {
         ),
     );
 
-    let path = rect.to_path(&instance, &device, physical_device);
+    let path = line.to_path(&instance, &device, physical_device);
+
 
     let mut render_target = RenderTargetBuilder::new()
         .instance(instance)

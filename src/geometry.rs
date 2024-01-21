@@ -9,35 +9,7 @@ use ash::vk::{
     MemoryPropertyFlags, PhysicalDeviceMemoryProperties,
 };
 
-/// # Represents a line segment
-/// ## Members
-/// * `start` - starting coordinate.
-/// * `end` - ending coordinate.
-pub struct Line {
-    start: Vec2<f32>,
-    end: Vec2<f32>,
-}
 
-impl Line {
-    /// # Example
-    /// ```no_run
-    /// use vulx::{Line,Vec2};
-    /// let line = Line::new(Vec2::new(30.0,30.0),Vec2::new(100.0,70.0));
-    /// ```
-    pub fn new(start: Vec2<f32>, end: Vec2<f32>) -> Self {
-        Self { start, end }
-    }
-
-    /// Returns the starting point.
-    pub fn start(&self) -> Vec2<f32> {
-        self.start
-    }
-
-    /// Returns the ending point.
-    pub fn end(&self) -> Vec2<f32> {
-        self.end
-    }
-}
 
 #[doc(hidden)]
 pub(crate) enum BufferUsage {
@@ -47,6 +19,7 @@ pub(crate) enum BufferUsage {
 }
 
 #[doc(hidden)]
+#[derive(Debug)]
 pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
     pub(crate) mem_prop: PhysicalDeviceMemoryProperties,
@@ -195,6 +168,7 @@ impl Destroy for Buffer {
     }
 }
 
+#[derive(Debug)]
 pub struct Path {
     pub(crate) buffers: Vec<Buffer>,
     pub(crate) index_buffers: Vec<(Buffer, usize)>,
