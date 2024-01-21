@@ -366,6 +366,10 @@ impl RenderTarget for HwndRenderTarget {
         self.vertex = 0;
         self.offsets.clear();
     }
+
+    fn stage(&mut self) -> &mut Stage {
+        &mut self.stage
+    }
 }
 
 impl Drop for HwndRenderTarget {

@@ -13,7 +13,7 @@ use winit::{
 
 #[cfg(target_os = "windows")]
 fn main() {
-    use vulx::{Pipeline, Stage};
+    use vulx::{Pipeline, Stage, StageMode};
 
     let event_loop = EventLoop::new().unwrap();
 
@@ -72,8 +72,7 @@ fn main() {
         .instance(&instance)
         .logical_device(&device)
         .physical_device(physical_device)
-        .width(win_size.width)
-        .height(win_size.height)
+        .mode(StageMode::Projection)
         .build()
         .unwrap();
 
@@ -94,9 +93,9 @@ fn main() {
 
     triangle.triangle(
         Vec3::new(
-            Vec4::new(0.0, 0.0, 0.0, 1.0),
-            Vec4::new(100.0, 300.0, 0.0, 1.0),
-            Vec4::new(0.0, 300.0, 0.0, 1.0),
+            Vec4::new(0.0, -0.5, 0.0, 1.0),
+            Vec4::new(0.5, 0.5, 0.0, 1.0),
+            Vec4::new(-0.5, 0.5, 0.0, 1.0),
         ),
         Vec3::new(
             Vec4::new(1.0, 0.0, 0.0, 1.0),
@@ -138,7 +137,9 @@ fn main() {
                 WindowEvent::CloseRequested => elwt.exit(),
                 WindowEvent::RedrawRequested => {
                     // Notify the windowing system that we'll be presenting to the window.
-
+                    let stage = render_target.stage();
+                    let camera = stage.camera();
+                    stage.update();
                     render_target.begin();
                     render_target.fill(&mut triangle);
                     render_target.end();

@@ -2,6 +2,7 @@ use std::ffi::c_void;
 
 use crate::{
     identity, Destroy, Instance, IntoPath, LogicalDevice, Mat4, PhysicalDevice, Vec2, Vec3, Vec4,
+    VlError, VlResult,
 };
 use ash::vk::{
     BufferCreateInfo, DeviceMemory, MappedMemoryRange, MemoryAllocateInfo, MemoryMapFlags,
@@ -119,19 +120,45 @@ impl Buffer {
                 .unwrap();
             libc::memcpy(write_mem, data, self.size);
 
-            let mapped_memory_range = MappedMemoryRange::builder()
-                .memory(memory)
-                .offset(0)
-                .size(self.size as u64)
-                .build();
-
-            device
-                .inner
-                .flush_mapped_memory_ranges(&[mapped_memory_range])
-                .unwrap();
-            device.inner.unmap_memory(memory);
             self.memory = Some(memory);
         }
+    }
+
+    pub fn flush_memory(&self, device: &LogicalDevice) -> VlResult<()> {
+        match self.memory {
+            Some(memory) => {
+                let mapped_memory_range = MappedMemoryRange::builder()
+                    .memory(memory)
+                    .offset(0)
+                    .size(self.size as u64)
+                    .build();
+
+                unsafe {
+                    device
+                        .inner
+                        .flush_mapped_memory_ranges(&[mapped_memory_range])
+                        .unwrap()
+                };
+            }
+            None => return Err(VlError::InvalidState("Memory is not allocated.")),
+        };
+
+        Ok(())
+    }
+
+    pub fn unmap_memory(&self,device: &LogicalDevice) -> VlResult<()> {
+        match self.memory {
+            Some(memory) => {
+                unsafe {
+                    device
+                        .inner
+                        .unmap_memory(memory);
+                };
+            }
+            None => return Err(VlError::InvalidState("Memory is not allocated.")),
+        };
+
+        Ok(())
     }
 }
 
@@ -293,6 +320,8 @@ impl IntoPath for PathGeometry {
                 BufferUsage::Vertex,
             );
             buffer.allocate_data(i.data.as_ptr() as *const c_void, device);
+            buffer.flush_memory(device).unwrap();
+            buffer.unmap_memory(device).unwrap();
             let mut index_buffer = Buffer::new(
                 instance,
                 physical_device,
@@ -301,6 +330,8 @@ impl IntoPath for PathGeometry {
                 BufferUsage::Index,
             );
             index_buffer.allocate_data(i.indices.as_ptr() as *const c_void, device);
+            index_buffer.flush_memory(device).unwrap();
+            index_buffer.unmap_memory(device).unwrap();
             buffers.push(buffer);
             index_buffers.push((index_buffer, i.indices.len()));
         }
