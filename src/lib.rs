@@ -1,4 +1,5 @@
 #![feature(offset_of)]
+#![feature(core_intrinsics)]
 
 mod device;
 pub mod geometry;
@@ -9,11 +10,13 @@ mod queue;
 mod renderpass;
 mod shader;
 mod stage;
+mod shape;
 pub mod target;
 mod types;
 #[cfg(feature = "util")]
 pub mod util;
 pub use device::*;
+pub use shape::*;
 pub use image::*;
 pub use instance::*;
 pub use pipeline::*;

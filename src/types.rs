@@ -89,6 +89,7 @@ pub struct PhysicalDevice(pub(crate) ash::vk::PhysicalDevice);
 
 pub trait RenderTarget {
     fn begin(&mut self);
+    fn draw(&mut self,path: Path);
     fn fill(&mut self, path: &mut impl IntoPath);
     fn stroke(&mut self, path: &mut impl IntoPath, thickness: f64);
     fn end(&mut self);
@@ -102,6 +103,12 @@ pub trait RenderTarget {
     fn logical_device(&self) -> &LogicalDevice;
     fn instance(&self) -> &Instance;
 }
+
+pub trait Shape: Sized {
+    fn area(&self) -> f64;
+    fn size(&self) -> usize;
+    fn to_path(&self,instance: &Instance,device: &LogicalDevice,physical_device: PhysicalDevice) -> Path;
+} 
 
 pub trait IntoPath {
     fn into_path(

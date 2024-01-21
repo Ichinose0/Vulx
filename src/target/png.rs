@@ -71,6 +71,10 @@ impl RenderTarget for PngRenderTarget {
         }
     }
 
+    fn draw(&mut self,path: Path) {
+        self.paths.push(path);
+    }
+
     fn fill(&mut self, path: &mut impl IntoPath) {
         if self.paths.is_empty() {
             let path = path.into_path(&self.instance, self.physical_device, &self.logical_device);
