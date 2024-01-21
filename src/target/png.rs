@@ -103,7 +103,6 @@ impl RenderTarget for PngRenderTarget {
                     .iter()
                     .map(|x| {
                         b.push(x.buffer);
-                        println!("Map");
                         0
                     })
                     .collect();

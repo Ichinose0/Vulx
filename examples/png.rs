@@ -10,6 +10,7 @@ const HEIGHT: u32 = 720;
 
 fn main() {
     let instance = InstanceBuilder::new().build().unwrap();
+    println!("Vulkan {}",instance.version().unwrap());
     let mut queue_family_index = 0;
     let physical_device = instance
         .default_physical_device(&mut queue_family_index)

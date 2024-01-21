@@ -119,6 +119,23 @@ impl Instance {
         Ok(devices[index])
     }
 
+    pub fn version(&self) -> Option<String> {
+        match self.entry.try_enumerate_instance_version() {
+            Ok(v) => {
+                match v {
+                    Some(v) => {
+                        let major = ash::vk::api_version_major(v);
+                        let minor = ash::vk::api_version_minor(v);
+                        let patch = ash::vk::api_version_patch(v);
+                        Some(format!("{}.{}.{}",major,minor,patch))
+                    }
+                    None => return None
+                }
+            },
+            Err(_) => return None
+        }
+    }
+
     pub fn get_queue_properties(&self, device: PhysicalDevice) -> Vec<QueueProperties> {
         let mut prop = vec![];
         let props = unsafe {
