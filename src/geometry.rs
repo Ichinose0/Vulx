@@ -47,6 +47,7 @@ pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
     pub(crate) mem_prop: PhysicalDeviceMemoryProperties,
     pub(crate) memory: Option<DeviceMemory>,
+    pub(crate) write_mem: Option<*mut c_void>,
     pub(crate) size: usize,
 }
 
@@ -80,6 +81,7 @@ impl Buffer {
             buffer,
             mem_prop,
             memory: None,
+            write_mem: None,
             size,
         }
     }
@@ -120,8 +122,25 @@ impl Buffer {
                 .unwrap();
             libc::memcpy(write_mem, data, self.size);
 
+            self.write_mem = Some(write_mem);
             self.memory = Some(memory);
         }
+    }
+
+    pub fn write(&self,data: *const c_void,size: usize) -> VlResult<()> {
+        if !size == self.size {
+            return Err(VlError::OutOfMemory)
+        }
+        match self.write_mem {
+            Some(memory) => {
+                unsafe {
+                    libc::memcpy(memory, data, size);
+                }
+            }
+            None => return Err(VlError::InvalidState("Memory is not allocated.")),
+        };
+
+        Ok(())
     }
 
     pub fn flush_memory(&self, device: &LogicalDevice) -> VlResult<()> {
@@ -146,7 +165,7 @@ impl Buffer {
         Ok(())
     }
 
-    pub fn unmap_memory(&self,device: &LogicalDevice) -> VlResult<()> {
+    pub fn unmap_memory(&mut self,device: &LogicalDevice) -> VlResult<()> {
         match self.memory {
             Some(memory) => {
                 unsafe {
@@ -157,6 +176,7 @@ impl Buffer {
             }
             None => return Err(VlError::InvalidState("Memory is not allocated.")),
         };
+        self.write_mem = None;
 
         Ok(())
     }

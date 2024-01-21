@@ -83,6 +83,7 @@ impl<'a> StageBuilder<'a> {
             vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
             device,
         );
+        buffer.flush_memory(device).unwrap();
 
         Ok(Stage {
             camera: self.camera,
@@ -90,6 +91,7 @@ impl<'a> StageBuilder<'a> {
             height: self.height,
             buffer,
             mvp,
+            mode: self.mode,
             descriptor: None,
         })
     }
@@ -109,6 +111,8 @@ pub struct Stage {
     pub(crate) mvp: Mvp,
     pub(crate) buffer: Buffer,
 
+    mode: StageMode,
+
     pub(crate) descriptor: Option<StageDescriptor>,
 }
 
@@ -123,6 +127,31 @@ impl Stage {
             width: 100,
             height: 100,
         }
+    }
+
+    pub fn camera(&mut self) -> &mut Camera {
+        &mut self.camera
+    }
+
+    pub fn update(&mut self) {
+        let projection = match self.mode {
+            StageMode::Ortho => {
+                nalgebra_glm::ortho(0.0, self.width as f32, 0.0, self.height as f32, -1.0, 1.0)
+            }
+            StageMode::Projection => nalgebra_glm::perspective(
+                self.width as f32 / self.height as f32,
+                45.0 * (180.0 / std::f32::consts::PI),
+                0.1,
+                100.0,
+            ),
+        };
+
+        let mvp = self.camera.mvp(projection);
+
+        self.buffer.write(
+            vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
+            std::mem::size_of::<Mvp>(),
+        ).unwrap();
     }
 }
 
