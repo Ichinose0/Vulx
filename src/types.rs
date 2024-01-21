@@ -8,6 +8,7 @@ pub type Vec2<T> = Vector2<T>;
 pub type Vec3<T> = Vector3<T>;
 pub type Vec4<T> = Vector4<T>;
 
+/// 4x4 matrix
 pub type Mat4<T> = Matrix4<T>;
 
 #[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
