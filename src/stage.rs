@@ -1,9 +1,10 @@
 use ash::vk::{DescriptorPool, DescriptorSet, DescriptorSetLayout, PipelineLayout};
 use libc::c_void;
+use nalgebra_glm::Mat3;
 
 use crate::{
     geometry::{Buffer, BufferUsage, Mvp},
-    Destroy, Instance, LogicalDevice, PhysicalDevice, VlError, VlResult,
+    Destroy, Instance, LogicalDevice, Mat4, PhysicalDevice, Vec3, VlError, VlResult,
 };
 
 pub struct StageBuilder<'a> {
@@ -11,7 +12,7 @@ pub struct StageBuilder<'a> {
     device: Option<&'a LogicalDevice>,
     physical_device: Option<PhysicalDevice>,
 
-    camera: Option<Camera>,
+    camera: Camera,
     mode: StageMode,
     width: u32,
     height: u32,
@@ -32,10 +33,16 @@ impl<'a> StageBuilder<'a> {
     }
     pub fn width(mut self, width: u32) -> Self {
         self.width = width;
+        self.camera.width(width as f32);
         self
     }
     pub fn height(mut self, height: u32) -> Self {
         self.height = height;
+        self.camera.height(height as f32);
+        self
+    }
+    pub fn mode(mut self, mode: StageMode) -> Self {
+        self.mode = mode;
         self
     }
     pub fn build(self) -> VlResult<Stage> {
@@ -63,11 +70,7 @@ impl<'a> StageBuilder<'a> {
             ),
         };
 
-        let mvp = Mvp::new(
-            nalgebra_glm::identity(),
-            nalgebra_glm::identity(),
-            projection,
-        );
+        let mvp = self.camera.mvp(projection);
 
         let mut buffer = Buffer::new(
             instance,
@@ -80,6 +83,7 @@ impl<'a> StageBuilder<'a> {
             vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
             device,
         );
+        buffer.flush_memory(device).unwrap();
 
         Ok(Stage {
             camera: self.camera,
@@ -87,6 +91,7 @@ impl<'a> StageBuilder<'a> {
             height: self.height,
             buffer,
             mvp,
+            mode: self.mode,
             descriptor: None,
         })
     }
@@ -98,13 +103,15 @@ pub enum StageMode {
 }
 
 pub struct Stage {
-    pub(crate) camera: Option<Camera>,
+    pub(crate) camera: Camera,
 
     pub(crate) width: u32,
     pub(crate) height: u32,
 
     pub(crate) mvp: Mvp,
     pub(crate) buffer: Buffer,
+
+    mode: StageMode,
 
     pub(crate) descriptor: Option<StageDescriptor>,
 }
@@ -115,11 +122,43 @@ impl Stage {
             instance: None,
             device: None,
             physical_device: None,
-            camera: None,
+            camera: Camera::default(),
             mode: StageMode::Ortho,
             width: 100,
             height: 100,
         }
+    }
+
+    pub fn camera(&mut self) -> &mut Camera {
+        &mut self.camera
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width as u32;
+        self.height = height as u32;
+    }
+
+    pub fn update(&mut self) {
+        let projection = match self.mode {
+            StageMode::Ortho => {
+                nalgebra_glm::ortho(0.0, self.width as f32, 0.0, self.height as f32, -1.0, 1.0)
+            }
+            StageMode::Projection => nalgebra_glm::perspective(
+                self.width as f32 / self.height as f32,
+                45.0 * (180.0 / std::f32::consts::PI),
+                0.1,
+                10.0,
+            ),
+        };
+
+        let mvp = self.camera.mvp(projection);
+
+        self.buffer
+            .write(
+                vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
+                std::mem::size_of::<Mvp>(),
+            )
+            .unwrap();
     }
 }
 
@@ -148,6 +187,12 @@ impl Destroy for StageDescriptor {
 
 pub struct Angle(f32, f32, f32);
 
+impl Default for Angle {
+    fn default() -> Self {
+        Self(0.0, 0.0, 1.0)
+    }
+}
+
 impl Angle {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self(x, y, z)
@@ -155,11 +200,71 @@ impl Angle {
 }
 
 pub struct Camera {
+    fov: f32,
+    width: f32,
+    height: f32,
+    x: f32,
+    y: f32,
+    z: f32,
     angle: Angle,
 }
 
 impl Camera {
-    pub fn new(angle: Angle) -> Self {
-        Self { angle }
+    pub fn new(fov: f32, width: f32, height: f32, angle: Angle) -> Self {
+        let fov = fov * (180.0 / std::f32::consts::PI);
+        Self {
+            fov,
+            width,
+            height,
+            angle,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
+    pub fn move_to(&mut self, x: f32, y: f32, z: f32) {
+        self.x = x;
+        self.y = y;
+        self.z = z;
+    }
+
+    pub(crate) fn mvp(&self, projection: Mat4<f32>) -> Mvp {
+        let view = nalgebra_glm::look_at(
+            &Vec3::new(self.angle.0, self.angle.1, self.angle.2),
+            &Vec3::new(0.0, 0.0, 0.0),
+            &Vec3::new(0.0, 1.0, 0.0),
+        );
+        let model = Mat4::new(
+            1.0, 0.0, 0.0, self.x, 0.0, 1.0, 0.0, self.y, 0.0, 0.0, 1.0, self.z, 0.0, 0.0, 0.0, 1.0,
+        );
+        Mvp::new(model, view, projection)
+    }
+
+    pub(crate) fn width(&mut self, width: f32) {
+        self.width = width;
+    }
+
+    pub(crate) fn height(&mut self, height: f32) {
+        self.height = height;
+    }
+
+    pub fn angle(&mut self, angle: Angle) {
+        self.angle = angle;
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        let fov = 45.0 * (180.0 / std::f32::consts::PI);
+        Self {
+            angle: Default::default(),
+            fov: fov,
+            width: 100.0,
+            height: 100.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 }

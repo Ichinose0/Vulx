@@ -2,7 +2,7 @@
 
 use nalgebra::{Matrix4, Vector2, Vector3, Vector4};
 
-use crate::{geometry::Path, Image, Instance, LogicalDevice};
+use crate::{geometry::Path, Image, Instance, LogicalDevice, Stage};
 
 pub type Vec2<T> = Vector2<T>;
 pub type Vec3<T> = Vector3<T>;
@@ -90,6 +90,8 @@ pub trait RenderTarget {
     fn clear(&mut self);
 
     fn set_image(&mut self, image: Image);
+
+    fn stage(&mut self) -> &mut Stage;
 
     fn logical_device(&self) -> &LogicalDevice;
     fn instance(&self) -> &Instance;

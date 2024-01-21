@@ -82,9 +82,13 @@ impl RenderTarget for HwndRenderTarget {
                             self.physical_device,
                             &self.surface,
                         );
-                        self.stage.width = capabilities.current_extent.width;
-                        self.stage.height = capabilities.current_extent.height;
+
                         self.swapchain = swapchain;
+
+                        self.stage.resize(
+                            capabilities.current_extent.width,
+                            capabilities.current_extent.height,
+                        );
 
                         self.images = self
                             .swapchain
@@ -365,6 +369,10 @@ impl RenderTarget for HwndRenderTarget {
         self.paths.clear();
         self.vertex = 0;
         self.offsets.clear();
+    }
+
+    fn stage(&mut self) -> &mut Stage {
+        &mut self.stage
     }
 }
 

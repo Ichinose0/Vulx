@@ -34,6 +34,10 @@ pub enum VlError {
     VkException(#[from] ash::vk::Result),
     #[error("`{0}`")]
     HardwareError(#[from] HardwareError),
+    #[error("This operation is not available.\nCause:`{0}`")]
+    InvalidState(&'static str),
+    #[error("Out of memory.")]
+    OutOfMemory,
 }
 
 #[derive(Debug, Error)]

@@ -188,6 +188,10 @@ impl RenderTarget for PngRenderTarget {
         self.vertex = 0;
         self.offsets.clear();
     }
+
+    fn stage(&mut self) -> &mut Stage {
+        &mut self.stage
+    }
 }
 
 impl Drop for PngRenderTarget {

@@ -160,8 +160,8 @@ impl<'a> Default for PipelineBuilder<'a> {
             stage: None,
             mode: Default::default(),
             topology: Default::default(),
-            width: 100,
-            height: 100,
+            width: 800,
+            height: 600,
             line_width: 1.0,
         }
     }
