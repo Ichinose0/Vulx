@@ -10,18 +10,21 @@ pub type Vec4<T> = Vector4<T>;
 
 pub type Mat4<T> = Matrix4<T>;
 
+#[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
 pub fn identity(ident: f32) -> Mat4<f32> {
     Mat4::new(
         ident, 0.0, 0.0, 0.0, 0.0, ident, 0.0, 0.0, 0.0, 0.0, ident, 0.0, 0.0, 0.0, 0.0, ident,
     )
 }
 
+#[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
 pub fn translate(x: f32, y: f32, z: f32) -> Mat4<f32> {
     Mat4::new(
         1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
     )
 }
 
+#[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
 pub fn perspective(fovy: f32, aspect: f32, near: f32, far: f32) -> Mat4<f32> {
     let f = 1.0 / (fovy / 2.0).tan();
 
@@ -45,6 +48,7 @@ pub fn perspective(fovy: f32, aspect: f32, near: f32, far: f32) -> Mat4<f32> {
     )
 }
 
+#[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
 pub fn look_at(eye: Vec3<f32>, center: Vec3<f32>, up: Vec3<f32>) -> Mat4<f32> {
     let f = (center - eye).normalize();
     let r = up.cross(&f).normalize();
@@ -59,6 +63,7 @@ pub fn look_at(eye: Vec3<f32>, center: Vec3<f32>, up: Vec3<f32>) -> Mat4<f32> {
     m * translation
 }
 
+#[deprecated(since = "0.0.1", note = "Use an external library such as glm.")]
 pub fn radians(r: f32) -> f32 {
     use std::f32::consts::PI;
     r * (PI / 180.0)
