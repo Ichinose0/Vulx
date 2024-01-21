@@ -13,7 +13,7 @@ You can also output to a png file, draw in a window, etc.
 
 ## Example
 ### Rectangle
-![Rectangle](Example.png)
+![Rectangle](animation.gif)
 
 # Getting started
 ```
