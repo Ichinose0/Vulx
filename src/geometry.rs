@@ -28,21 +28,25 @@ impl Line {
         Self { start, end }
     }
 
+    /// Returns the starting point.
     pub fn start(&self) -> Vec2<f32> {
         self.start
     }
 
+    /// Returns the ending point.
     pub fn end(&self) -> Vec2<f32> {
         self.end
     }
 }
 
-pub enum BufferUsage {
+#[doc(hidden)]
+pub(crate) enum BufferUsage {
     Vertex,
     Uniform,
     Index,
 }
 
+#[doc(hidden)]
 pub(crate) struct Buffer {
     pub(crate) buffer: ash::vk::Buffer,
     pub(crate) mem_prop: PhysicalDeviceMemoryProperties,
@@ -209,18 +213,21 @@ impl Destroy for Path {
     }
 }
 
+#[doc(hidden)]
 #[derive(Debug)]
 pub(crate) struct VertexData {
     pub(crate) pos: Vec4<f32>,
     pub(crate) color: Vec4<f32>,
 }
 
+#[doc(hidden)]
 pub(crate) struct IndexBuffer {
     pub(crate) data: Vec<VertexData>,
     pub(crate) indices: Vec<u32>,
 }
 
-pub struct Mvp {
+#[doc(hidden)]
+pub(crate) struct Mvp {
     pub(crate) model: Mat4<f32>,
     pub(crate) view: Mat4<f32>,
     pub(crate) projection: Mat4<f32>,
@@ -242,6 +249,7 @@ impl Default for Mvp {
     }
 }
 
+/// # PathGeometry
 /// Represents complex shapes that can be represented by rectangles, circles, and other figures.
 #[derive(Default)]
 pub struct PathGeometry {
@@ -255,6 +263,7 @@ impl PathGeometry {
         }
     }
 
+    /// Draws a triangle.
     pub fn triangle(&mut self, vert: Vec3<Vec4<f32>>, color: Vec3<Vec4<f32>>) {
         let index_buffer = IndexBuffer {
             data: vec![
@@ -276,6 +285,7 @@ impl PathGeometry {
         self.index_buffer.push(index_buffer);
     }
 
+    /// Draws a rectangle.
     pub fn rectangle(&mut self, vert: Vec4<Vec4<f32>>, color: Vec4<Vec4<f32>>) {
         let index_buffer = IndexBuffer {
             data: vec![
@@ -309,6 +319,7 @@ impl PathGeometry {
     //     }
     // }
 
+    /// Get the number of vertices.
     pub fn size(&self) -> usize {
         let mut size = 0;
         for i in &self.index_buffer {

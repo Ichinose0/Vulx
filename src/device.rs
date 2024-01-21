@@ -20,6 +20,8 @@ impl LogicalDevice {
         Queue(unsafe { self.inner.get_device_queue(queue_family_index as u32, 0) })
     }
 
+    /// Create a shader module from a successfully loaded Spirv.
+    /// Shader type must also be specified.
     pub fn create_shader_module(&self, spirv: Spirv, kind: ShaderKind) -> VlResult<Shader> {
         let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
         let shader = match unsafe { self.inner.create_shader_module(&shader_create_info, None) } {

@@ -74,12 +74,29 @@ pub enum InstanceTarget {
     Window,
 }
 
+/// # Instance
+/// Instances that are central to the creation and processing of various objects such as LogicalDevice.
+/// 
+/// ## Example
+/// ```
+/// use vulx::InstanceBuilder;
+/// 
+/// fn main() {
+///     let instance = InstanceBuilder::new().build().unwrap();
+///     let mut queue_family_index = 0;
+///     // Get physical device!
+///     let physical_device = instance
+///         .default_physical_device(&mut queue_family_index)
+///         .unwrap();
+/// }
+/// ```
 pub struct Instance {
     pub(crate) inner: ash::Instance,
     pub(crate) entry: Entry,
 }
 
 impl Instance {
+    /// Enumerates available physical devices and returns them as Vec type.
     pub fn enumerate_physical_device(&self) -> Vec<PhysicalDevice> {
         let mut devices = vec![];
         let vk_devices = unsafe { self.inner.enumerate_physical_devices().unwrap() };
@@ -89,6 +106,8 @@ impl Instance {
         devices
     }
 
+    /// Returns the physical device considered optimal.
+    /// The physical device returned by this method may not be the one you want!
     pub fn default_physical_device(
         &self,
         queue_family_index: &mut usize,
@@ -119,6 +138,7 @@ impl Instance {
         Ok(devices[index])
     }
 
+    /// Get the version of Vulkan.
     pub fn version(&self) -> Option<String> {
         match self.entry.try_enumerate_instance_version() {
             Ok(v) => {
@@ -136,6 +156,8 @@ impl Instance {
         }
     }
 
+    /// Gets the queue properties of the physical device.  
+    /// The length of this Vec type is equivalent to the length of the Vec of the physical device obtained by enumerate_physica_device.
     pub fn get_queue_properties(&self, device: PhysicalDevice) -> Vec<QueueProperties> {
         let mut prop = vec![];
         let props = unsafe {
@@ -148,6 +170,8 @@ impl Instance {
         prop
     }
 
+    /// Create a logical device.
+    // This requires a valid physical device and QueueFamilyIndex.
     pub fn create_logical_device(
         &self,
         device: PhysicalDevice,

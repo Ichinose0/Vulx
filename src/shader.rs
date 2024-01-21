@@ -49,6 +49,7 @@ impl Spirv {
         Self { data: spirv }
     }
 
+    /// Loads the default fragment shader.
     pub fn fragment_default() -> Self {
         let mut spirv_file = Cursor::new(&DEFAULT_FRAGMENT_SHADER);
         let spirv = read_spv(&mut spirv_file).unwrap();
@@ -56,6 +57,7 @@ impl Spirv {
         Self { data: spirv }
     }
 
+    /// Loads the default vertex shader.
     pub fn vertex_default() -> Self {
         let mut spirv_file = Cursor::new(&DEFAULT_VERTEX_SHADER);
         let spirv = read_spv(&mut spirv_file).unwrap();

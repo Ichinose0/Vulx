@@ -62,7 +62,7 @@ impl<'a> StageBuilder<'a> {
             StageMode::Ortho => {
                 nalgebra_glm::ortho(0.0, self.width as f32, 0.0, self.height as f32, -1.0, 1.0)
             }
-            StageMode::Projection => nalgebra_glm::perspective(
+            StageMode::Perspective => nalgebra_glm::perspective(
                 self.width as f32 / self.height as f32,
                 45.0 * (180.0 / std::f32::consts::PI),
                 0.1,
@@ -90,25 +90,29 @@ impl<'a> StageBuilder<'a> {
             width: self.width,
             height: self.height,
             buffer,
-            mvp,
             mode: self.mode,
             descriptor: None,
         })
     }
 }
 
+/// # StageMode
+/// Specify projection method.
 pub enum StageMode {
+    /// Orthographic matrix
     Ortho,
-    Projection,
+    /// Perspective matrix
+    Perspective,
 }
 
+/// # Stage
+/// Batch management of image size and projection.
 pub struct Stage {
     pub(crate) camera: Camera,
 
     pub(crate) width: u32,
     pub(crate) height: u32,
 
-    pub(crate) mvp: Mvp,
     pub(crate) buffer: Buffer,
 
     mode: StageMode,
@@ -143,7 +147,7 @@ impl Stage {
             StageMode::Ortho => {
                 nalgebra_glm::ortho(0.0, self.width as f32, 0.0, self.height as f32, -1.0, 1.0)
             }
-            StageMode::Projection => nalgebra_glm::perspective(
+            StageMode::Perspective => nalgebra_glm::perspective(
                 self.width as f32 / self.height as f32,
                 45.0 * (180.0 / std::f32::consts::PI),
                 0.1,
@@ -185,6 +189,7 @@ impl Destroy for StageDescriptor {
     }
 }
 
+/// Specify the camera angle.
 pub struct Angle(f32, f32, f32);
 
 impl Default for Angle {
@@ -210,6 +215,13 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Create a Camera.
+    ///
+    /// # Value Meaning
+    /// * `fov` - viewing angle.
+    /// * `width` - Image width.
+    /// * `height` - Image height.
+    /// * `angle` - camera angle.
     pub fn new(fov: f32, width: f32, height: f32, angle: Angle) -> Self {
         let fov = fov * (180.0 / std::f32::consts::PI);
         Self {
@@ -223,12 +235,14 @@ impl Camera {
         }
     }
 
+    /// Move the camera.
     pub fn move_to(&mut self, x: f32, y: f32, z: f32) {
         self.x = x;
         self.y = y;
         self.z = z;
     }
 
+    #[doc(hidden)]
     pub(crate) fn mvp(&self, projection: Mat4<f32>) -> Mvp {
         let view = nalgebra_glm::look_at(
             &Vec3::new(self.angle.0, self.angle.1, self.angle.2),
@@ -241,14 +255,17 @@ impl Camera {
         Mvp::new(model, view, projection)
     }
 
+    #[doc(hidden)]
     pub(crate) fn width(&mut self, width: f32) {
         self.width = width;
     }
 
+    #[doc(hidden)]
     pub(crate) fn height(&mut self, height: f32) {
         self.height = height;
     }
 
+    /// Specify the camera angle.
     pub fn angle(&mut self, angle: Angle) {
         self.angle = angle;
     }

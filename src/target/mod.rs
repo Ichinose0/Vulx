@@ -1,8 +1,13 @@
+#[doc(hidden)]
 #[cfg(target_os = "windows")]
 #[cfg(feature = "window")]
 mod hwnd;
+#[doc(hidden)]
 mod png;
+#[doc(hidden)]
+#[cfg(feature = "window")]
 pub(crate) mod surface;
+#[doc(hidden)]
 #[cfg(feature = "window")]
 pub(crate) mod swapchain;
 use ash::vk::{
@@ -18,6 +23,9 @@ use crate::{
     Stage, VlError, VlResult,
 };
 
+/// # RenderTargetBuilder
+/// Various render targets can be created through this builder.
+/// Some render targets cannot be used without a feature flag.
 #[derive(Default)]
 pub struct RenderTargetBuilder {
     buffer: Option<CommandBuffer>,
@@ -87,6 +95,8 @@ impl RenderTargetBuilder {
         self
     }
 
+    /// Windows only.  
+    /// "window" feature is required
     #[cfg(target_os = "windows")]
     #[cfg(feature = "window")]
     pub fn build_hwnd(
@@ -252,6 +262,7 @@ impl RenderTargetBuilder {
     }
 }
 
+#[doc(hidden)]
 pub struct CommandBuffer {
     pub(crate) command_pool: CommandPool,
     cmd_buffers: Vec<ash::vk::CommandBuffer>,
