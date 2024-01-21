@@ -133,6 +133,11 @@ impl Stage {
         &mut self.camera
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width as u32;
+        self.height = height as u32;
+    }
+
     pub fn update(&mut self) {
         let projection = match self.mode {
             StageMode::Ortho => {
@@ -142,16 +147,18 @@ impl Stage {
                 self.width as f32 / self.height as f32,
                 45.0 * (180.0 / std::f32::consts::PI),
                 0.1,
-                100.0,
+                10.0,
             ),
         };
 
         let mvp = self.camera.mvp(projection);
 
-        self.buffer.write(
-            vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
-            std::mem::size_of::<Mvp>(),
-        ).unwrap();
+        self.buffer
+            .write(
+                vec![mvp.model, mvp.view, mvp.projection].as_ptr() as *const c_void,
+                std::mem::size_of::<Mvp>(),
+            )
+            .unwrap();
     }
 }
 
@@ -196,6 +203,9 @@ pub struct Camera {
     fov: f32,
     width: f32,
     height: f32,
+    x: f32,
+    y: f32,
+    z: f32,
     angle: Angle,
 }
 
@@ -207,7 +217,16 @@ impl Camera {
             width,
             height,
             angle,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         }
+    }
+
+    pub fn move_to(&mut self, x: f32, y: f32, z: f32) {
+        self.x = x;
+        self.y = y;
+        self.z = z;
     }
 
     pub(crate) fn mvp(&self, projection: Mat4<f32>) -> Mvp {
@@ -216,7 +235,10 @@ impl Camera {
             &Vec3::new(0.0, 0.0, 0.0),
             &Vec3::new(0.0, 1.0, 0.0),
         );
-        Mvp::new(nalgebra_glm::identity(), view, projection)
+        let model = Mat4::new(
+            1.0, 0.0, 0.0, self.x, 0.0, 1.0, 0.0, self.y, 0.0, 0.0, 1.0, self.z, 0.0, 0.0, 0.0, 1.0,
+        );
+        Mvp::new(model, view, projection)
     }
 
     pub(crate) fn width(&mut self, width: f32) {
@@ -240,6 +262,9 @@ impl Default for Camera {
             fov: fov,
             width: 100.0,
             height: 100.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         }
     }
 }

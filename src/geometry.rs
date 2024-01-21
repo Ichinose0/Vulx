@@ -127,16 +127,14 @@ impl Buffer {
         }
     }
 
-    pub fn write(&self,data: *const c_void,size: usize) -> VlResult<()> {
+    pub fn write(&self, data: *const c_void, size: usize) -> VlResult<()> {
         if !size == self.size {
-            return Err(VlError::OutOfMemory)
+            return Err(VlError::OutOfMemory);
         }
         match self.write_mem {
-            Some(memory) => {
-                unsafe {
-                    libc::memcpy(memory, data, size);
-                }
-            }
+            Some(memory) => unsafe {
+                libc::memcpy(memory, data, size);
+            },
             None => return Err(VlError::InvalidState("Memory is not allocated.")),
         };
 
@@ -165,13 +163,11 @@ impl Buffer {
         Ok(())
     }
 
-    pub fn unmap_memory(&mut self,device: &LogicalDevice) -> VlResult<()> {
+    pub fn unmap_memory(&mut self, device: &LogicalDevice) -> VlResult<()> {
         match self.memory {
             Some(memory) => {
                 unsafe {
-                    device
-                        .inner
-                        .unmap_memory(memory);
+                    device.inner.unmap_memory(memory);
                 };
             }
             None => return Err(VlError::InvalidState("Memory is not allocated.")),

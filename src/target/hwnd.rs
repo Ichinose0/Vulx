@@ -82,9 +82,13 @@ impl RenderTarget for HwndRenderTarget {
                             self.physical_device,
                             &self.surface,
                         );
-                        self.stage.width = capabilities.current_extent.width;
-                        self.stage.height = capabilities.current_extent.height;
+
                         self.swapchain = swapchain;
+
+                        self.stage.resize(
+                            capabilities.current_extent.width,
+                            capabilities.current_extent.height,
+                        );
 
                         self.images = self
                             .swapchain

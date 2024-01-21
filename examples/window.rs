@@ -1,3 +1,5 @@
+#![feature(core_intrinsics)]
+
 use vulx::{
     geometry::PathGeometry,
     target::{CommandBuffer, RenderTargetBuilder},
@@ -13,6 +15,8 @@ use winit::{
 
 #[cfg(target_os = "windows")]
 fn main() {
+    use std::intrinsics::{cosf64, sinf64};
+
     use vulx::{Pipeline, Stage, StageMode};
 
     let event_loop = EventLoop::new().unwrap();
@@ -72,6 +76,8 @@ fn main() {
         .instance(&instance)
         .logical_device(&device)
         .physical_device(physical_device)
+        .width(win_size.width)
+        .height(win_size.height)
         .mode(StageMode::Projection)
         .build()
         .unwrap();
@@ -91,16 +97,31 @@ fn main() {
 
     let mut triangle = PathGeometry::new();
 
-    triangle.triangle(
-        Vec3::new(
-            Vec4::new(0.0, -0.5, 0.0, 1.0),
-            Vec4::new(0.5, 0.5, 0.0, 1.0),
-            Vec4::new(-0.5, 0.5, 0.0, 1.0),
+    // triangle.triangle(
+    //     Vec3::new(
+    //         Vec4::new(0.0, -0.5, 0.0, 1.0),
+    //         Vec4::new(0.5, 0.5, 0.0, 1.0),
+    //         Vec4::new(-0.5, 0.5, 0.0, 1.0),
+    //     ),
+    //     Vec3::new(
+    //         Vec4::new(1.0, 0.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 1.0, 0.0, 1.0),
+    //         Vec4::new(0.0, 0.0, 1.0, 1.0),
+    //     ),
+    // );
+
+    triangle.rectangle(
+        Vec4::new(
+            Vec4::new(-0.9, -0.9, 0.0, 1.0),
+            Vec4::new(0.9, 0.9, 0.0, 1.0),
+            Vec4::new(-0.9, 0.9, 0.0, 1.0),
+            Vec4::new(0.9, -0.9, 0.0, 1.0),
         ),
-        Vec3::new(
-            Vec4::new(1.0, 0.0, 0.0, 1.0),
-            Vec4::new(0.0, 1.0, 0.0, 1.0),
+        Vec4::new(
             Vec4::new(0.0, 0.0, 1.0, 1.0),
+            Vec4::new(0.0, 1.0, 0.0, 1.0),
+            Vec4::new(1.0, 0.0, 0.0, 1.0),
+            Vec4::new(1.0, 1.0, 1.0, 1.0),
         ),
     );
 
@@ -131,18 +152,27 @@ fn main() {
 
     window.pre_present_notify();
 
+    let mut time = 0.0;
+
     event_loop.run(move |event, elwt| {
         match event {
             Event::WindowEvent { event, window_id } if window_id == window.id() => match event {
                 WindowEvent::CloseRequested => elwt.exit(),
                 WindowEvent::RedrawRequested => {
-                    // Notify the windowing system that we'll be presenting to the window.
-                    let stage = render_target.stage();
-                    let camera = stage.camera();
-                    stage.update();
                     render_target.begin();
                     render_target.fill(&mut triangle);
                     render_target.end();
+
+                    time += 0.03;
+                    // Notify the windowing system that we'll be presenting to the window.
+                    let stage = render_target.stage();
+                    let camera = stage.camera();
+                    camera.move_to(
+                        (0.3 * unsafe { cosf64(time) }) as f32,
+                        (0.3 * unsafe { sinf64(time) }) as f32,
+                        0.0,
+                    );
+                    stage.update();
                 }
                 WindowEvent::Resized(size) => {
                     window.pre_present_notify();
@@ -156,7 +186,7 @@ fn main() {
 
             _ => (),
         }
-    });
+    }).unwrap();
 }
 
 #[cfg(not(target_os = "windows"))]
